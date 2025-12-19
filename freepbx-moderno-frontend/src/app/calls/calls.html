@@ -1,0 +1,33 @@
+<!-- //src/app/calls/calss.html--><h2>Últimas llamadas</h2>
+<button (click)="loadCalls()" [disabled]="loading" class="btn-refresh">
+  {{ loading ? 'Cargando...' : 'Actualizar' }}
+</button>
+
+@if (calls.length > 0) {
+  <table class="calls-table">
+    <thead>
+      <tr>
+        <th>De</th>
+        <th>Para</th>
+        <th>Duración</th>
+        <th>Fecha</th>
+        <th>Estado</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (call of calls; track call.calldate) {
+        <tr>
+          <td>{{ call.src }}</td>
+          <td>{{ call.dst }}</td>
+          <td>{{ call.duration }} seg</td>
+          <td>{{ call.calldate | date:'HH:mm - dd/MM/yyyy' }}</td>
+          <td [class.call-status]="true" [class.answered]="call.disposition === 'ANSWERED'">
+            {{ call.disposition === 'ANSWERED' ? 'Contestada' : 'No contestada' }}
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+} @else if (!loading) {
+  <p>No hay llamadas recientes.</p>
+}

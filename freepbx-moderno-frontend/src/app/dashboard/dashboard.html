@@ -1,0 +1,16 @@
+<h2>Dashboard de Llamadas</h2>
+
+@if (loading) {
+  <p>Cargando...</p>
+}
+
+@if (calls && calls.length > 0) {
+  @for (call of calls; track call.calldate) {
+    <div class="call-card">
+      <p><strong>De:</strong> {{ call.src }} → <strong>Para:</strong> {{ call.dst }}</p>
+      <p>Duración: {{ call.duration }} seg | Estado: {{ call.disposition }}</p>
+    </div>
+  }
+} @else if (!loading) {
+  <p>No hay llamadas recientes.</p>
+}

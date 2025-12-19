@@ -1,0 +1,18 @@
+.call-card {
+  background: white;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 12px 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  border-left: 4px solid #cbd5e1;
+}
+
+.call-card p {
+  margin: 6px 0;
+  color: #334155;
+}
+
+.call-card p:first-child {
+  font-weight: 600;
+  color: #1e293b;
+}

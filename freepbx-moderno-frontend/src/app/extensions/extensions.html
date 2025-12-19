@@ -1,0 +1,30 @@
+<!-- //src/app/extensions/extensions.html -->
+ <h2>Extensiones</h2>
+
+<button (click)="loadExtensions()" [disabled]="loading" class="btn-refresh">
+  {{ loading ? 'Cargando...' : 'Actualizar' }}
+</button>
+
+@if (loading) {
+  <p>Cargando extensiones....</p>
+} @else if (extensions.length === 0) {
+  <p>No se encontraron extensiones.</p>
+} @else {
+  <div class="extensions-list">
+    @for (ext of extensions; track $index) {
+      <div class="extension-card">
+        <div class="ext-header">
+          <span class="ext-number">{{ ext.extension }}</span>
+          <span class="ext-status" [class.online]="ext.status === 'online'" [class.offline]="ext.status === 'offline'">
+            @if (ext.status === 'online') {
+              Online
+            } @else {
+              Offline
+            }
+          </span>
+        </div>
+        <div class="ext-name">{{ ext.name || 'Sin nombre' }}</div>
+      </div>
+    }
+  </div>
+}

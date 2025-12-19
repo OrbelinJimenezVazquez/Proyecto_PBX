@@ -1,0 +1,21 @@
+<!--  //src/app/trunks/trunks.html -->
+<h1>Troncales</h1>
+<button (click)="loadTrunks()" [disabled]="loading" class="btn-refresh">
+    {{ loading ? 'Cargando...' : 'Actualizar' }}
+</button>
+
+@if (loading) {
+  <p>Cargando troncales...</p>
+} @else if (trunks.length === 0) {
+  <p>No se encontraron troncales.</p>
+} @else {
+  <div class="trunks-list">
+    @for (trunk of trunks; track $index) {
+      <div class="trunk-card">
+        <div class="trunk-name">{{ trunk.name }}</div>
+        <div class="trunk-tech">Tecnología: <strong>{{ trunk.tech }}</strong></div>
+        <div class="trunk-id">ID: {{ trunk.channelid }}</div>
+      </div>
+    }
+  </div>
+}
