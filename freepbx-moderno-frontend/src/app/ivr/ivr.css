@@ -1,0 +1,57 @@
+.ivr-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border-left: 4px solid #0d9488;
+}
+
+.ivr-card h2 {
+  margin: 0 0 12px 0;
+  color: #0f766e;
+}
+
+.ivr-announcement {
+  color: #0f766e;
+  font-style: italic;
+  margin-bottom: 16px;
+  padding: 8px 12px;
+  background: #f0fdfa;
+  border-radius: 6px;
+}
+
+.ivr-options h3 {
+  margin: 16px 0 12px 0;
+  color: #1e293b;
+}
+
+.ivr-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  margin: 8px 0;
+  background: #f8fafc;
+  border-radius: 8px;
+  border-left: 3px solid #0d9488;
+}
+
+.option-key {
+  font-weight: bold;
+  color: #0d9488;
+  font-size: 1.1em;
+}
+
+.option-dest {
+  color: #475569;
+  flex: 1;
+  margin: 0 16px;
+}
+
+.option-stats {
+  color: #64748b;
+  font-size: 0.9em;
+  text-align: right;
+  min-width: 120px;
+}

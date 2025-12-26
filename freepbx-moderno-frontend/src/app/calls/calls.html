@@ -1,56 +1,104 @@
 <!-- //src/app/calls/calss.html-->
-<h2>Llamadas</h2>
+<h2>📞 Llamadas Detalladas</h2>
 
 <!-- Filtros -->
 <div class="filters">
-  <button (click)="changePeriod('today')" [class.active]="currentPeriod === 'today'" class="filter-btn">Hoy</button>
-  <button (click)="changePeriod('week')" [class.active]="currentPeriod === 'week'" class="filter-btn">Últimos 7 días</button>
-  <button (click)="changePeriod('month')" [class.active]="currentPeriod === 'month'" class="filter-btn">Últimos 30 días</button>
-  <button (click)="changePeriod('year')" [class.active]="currentPeriod === 'year'" class="filter-btn">Último año</button>
+  <button 
+    (click)="changePeriod('today')" 
+    [class.active]="currentPeriod === 'today'"
+    class="filter-btn">
+    Hoy ({{ currentPeriod === 'today' ? totalCalls : '' }})
+  </button>
+  <button 
+    (click)="changePeriod('week')" 
+    [class.active]="currentPeriod === 'week'"
+    class="filter-btn">
+    Últimos 7 días
+  </button>
+  <button 
+    (click)="changePeriod('month')" 
+    [class.active]="currentPeriod === 'month'"
+    class="filter-btn">
+    Últimos 30 días
+  </button>
+  <button 
+    (click)="changePeriod('year')" 
+    [class.active]="currentPeriod === 'year'"
+    class="filter-btn">
+    Último año
+  </button>
 </div>
 
 <!-- Resumen -->
-<p>{{ totalCalls }} llamadas encontradas.</p>
+<p>
+  Mostrando {{ calls.length }} de {{ totalCalls }} llamadas.
+  Página {{ currentPage }} de {{ totalPages }}.
+</p>
 
 <!-- Tabla -->
-@if (calls.length > 0) {
-  <table class="calls-table">
-    <thead>
-      <tr>
-        <th>De</th>
-        <th>Para</th>
-        <th>Duración</th>
-        <th>Fecha</th>
-        <th>Estado</th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (call of calls; track call.calldate) {
-        <tr>
-          <td>{{ call.src }}</td>
-          <td>{{ call.dst }}</td>
-          <td>{{ call.duration }} seg</td>
-          <td>{{ call.calldate | date:'HH:mm - dd/MM/yyyy' }}</td>
-          <td [class.call-status]="true" [class.answered]="call.disposition === 'ANSWERED'">
-            {{ call.disposition === 'ANSWERED' ? 'Contestada' : 'No contestada' }}
-          </td>
-        </tr>
-      }
-    </tbody>
-  </table>
-} @else if (!loading) {
+@if (loading) {
+  <p>Cargando llamadas...</p>
+} @else if (calls.length === 0) {
   <p>No hay llamadas en este período.</p>
+} @else {
+  <div class="table-container">
+    <table class="calls-table">
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Número</th>
+          <th>Cola</th>
+          <th>Número de Agente</th>
+          <th>Agente</th>
+          <th>Evento</th>
+          <th>Tiempo de espera</th>
+          <th>Tiempo llamada</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (call of calls; track call.uniqueid) {
+          <tr>
+            <td>{{ call.fecha | date:'dd/MM/yyyy HH:mm' }}</td>
+            <td>{{ call.numero }}</td>
+            <td>
+              @if (call.cola === 'Sí') {
+                <span class="tag queue">Sí</span>
+              } @else {
+                <span class="tag">No</span>
+              }
+            </td>
+            <td>{{ call.numero_agente }}</td>
+            <td>{{ call.agente }}</td>
+            <td [class.call-status]="true" [class.answered]="call.evento === 'ANSWERED'">
+              {{ call.evento === 'ANSWERED' ? 'Contestada' : 'No contestada' }}
+            </td>
+            <td>{{ call.tiempo_espera }} seg</td>
+            <td>{{ call.tiempo_llamada }} seg</td>
+            <td>
+              <button (click)="viewDetails(call)" class="btn-detail">Ver más</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Paginación -->
+  @if (totalPages > 1) {
+    <div class="pagination">
+      <button (click)="goToPage(1)" [disabled]="currentPage === 1">Primera</button>
+      <button (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1">Anterior</button>
+      
+      <span>Página {{ currentPage }} de {{ totalPages }}</span>
+      
+      <button (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages">Siguiente</button>
+      <button (click)="goToPage(totalPages)" [disabled]="currentPage === totalPages">Última</button>
+    </div>
+  }
 }
 
-<!-- Paginación -->
-@if (totalPages > 1) {
-  <div class="pagination">
-    <button (click)="loadCalls(1)" [disabled]="currentPage === 1">Primera</button>
-    <button (click)="loadCalls(currentPage - 1)" [disabled]="currentPage === 1">Anterior</button>
-    
-    <span>{{ currentPage }} / {{ totalPages }}</span>
-    
-    <button (click)="loadCalls(currentPage + 1)" [disabled]="currentPage === totalPages">Siguiente</button>
-    <button (click)="loadCalls(totalPages)" [disabled]="currentPage === totalPages">Última</button>
-  </div>
-}
+<!-- Botón actualizar -->
+<button (click)="loadCalls(currentPage)" [disabled]="loading" class="btn-refresh">
+  🔄 {{ loading ? 'Cargando...' : 'Actualizar' }}
+</button>

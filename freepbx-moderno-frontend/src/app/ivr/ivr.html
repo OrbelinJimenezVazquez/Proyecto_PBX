@@ -1,0 +1,29 @@
+<h1>🎙️ Menús de Voz (IVR)</h1>
+
+@if (loading) {
+  <p>Cargando IVRs...</p>
+} @else if (ivrs.length === 0) {
+  <p>No hay IVRs configurados.</p>
+} @else {
+  @for (ivr of ivrs; track ivr.id) {
+    <div class="ivr-card">
+      <h2>{{ ivr.name }}</h2>
+      @if (ivr.announcement) {
+        <p class="ivr-announcement">🔈 Anuncio: "{{ ivr.announcement }}"</p>
+      }
+      
+      <div class="ivr-options">
+        <h3>Opciones:</h3>
+        @for (opt of ivr.options; track opt.option) {
+          <div class="ivr-option">
+            <div class="option-key">Presione <strong>{{ opt.option }}</strong></div>
+            <div class="option-dest">{{ opt.dest_label }}</div>
+            <div class="option-stats">
+              📞 {{ opt.calls_last_30_days }} llamadas (últimos 30 días)
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+}

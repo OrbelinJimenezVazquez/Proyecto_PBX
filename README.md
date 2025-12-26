@@ -17,7 +17,7 @@ Conectada a la base de datos real de la empresa (`10.10.16.9`).
 
 ### Requisitos previos
 - Node.js (v18+)
-- Python 3.10+
+- Python 3.10+  
 - MySQL Workbench (opcional, para verificar conexión)
 
 ### Pasos

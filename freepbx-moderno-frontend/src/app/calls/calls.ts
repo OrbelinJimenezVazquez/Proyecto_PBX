@@ -1,3 +1,4 @@
+// src/app/calls/calls.ts
 import { Component, OnInit } from '@angular/core';
 import { ApiService } from '../core/api.service';
 import { DatePipe } from '@angular/common';
@@ -12,7 +13,6 @@ import { DatePipe } from '@angular/common';
 export class CallsComponent implements OnInit {
   calls: any[] = [];
   loading = false;
-  viewMode: 'recent' | 'filtered' = 'filtered'; // ahora por defecto: filtrado (últimos 30 días)
   currentPeriod: 'today' | 'week' | 'month' | 'year' = 'month';
   
   // Paginación
@@ -23,12 +23,11 @@ export class CallsComponent implements OnInit {
 
   constructor(private api: ApiService) {}
 
-  // Cargar llamadas con paginación
   loadCalls(page: number = 1) {
     this.loading = true;
     this.currentPage = page;
     
-    this.api.getCallsByPeriod(this.currentPeriod, page, this.pageSize).subscribe({
+    this.api.getDetailedCalls(this.currentPeriod, page, this.pageSize).subscribe({
       next: (response) => {
         this.calls = response.items || [];
         this.totalCalls = response.total;
@@ -36,20 +35,32 @@ export class CallsComponent implements OnInit {
         this.loading = false;
       },
       error: (err) => {
-        console.error('Error:', err);
+        console.error('Error al cargar llamadas', err);
         this.loading = false;
+        alert('Error al cargar llamadas. Revisa la consola.');
       }
     });
   }
 
-  // Cambiar período
   changePeriod(period: 'today' | 'week' | 'month' | 'year') {
     this.currentPeriod = period;
     this.currentPage = 1;
     this.loadCalls(1);
   }
 
+  // Navegación de paginación
+  goToPage(page: number) {
+    if (page >= 1 && page <= this.totalPages) {
+      this.loadCalls(page);
+    }
+  }
+
   ngOnInit(): void {
-    this.loadCalls(1); // carga inicial: últimos 30 días, página 1
+    this.loadCalls(1);
+  }
+
+  viewDetails(call: any) {
+    console.log('Detalles:', call);
+    // Implementar modal o página de detalle
   }
 }

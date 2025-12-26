@@ -1,25 +1,68 @@
-/* Modo de vista */
-.view-toggle {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
+/* Contenedor de tabla responsivo */
+.table-container {
+  overflow-x: auto;
+  margin-top: 16px;
 }
 
-.view-btn {
-  padding: 8px 16px;
-  border: 1px solid #cbd5e1;
-  background: white;
+.calls-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+}
+
+.calls-table th,
+.calls-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.calls-table th {
+  background: #f8fafc;
+  font-weight: bold;
+  color: #1e293b;
+}
+
+/* Tags */
+.tag {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.85em;
+  font-weight: bold;
+}
+
+.tag.queue {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.tag {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+/* Estado de llamada */
+.call-status.answered {
+  color: #16a34a;
+  font-weight: bold;
+}
+
+/* Botones */
+.btn-detail {
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
   border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 0.9em;
   cursor: pointer;
+  transition: background 0.2s;
 }
 
-.view-btn.active {
-  background: #3b82f6;
-  color: white;
-  border-color: #3b82f6;
+.btn-detail:hover {
+  background: #e5e7eb;
 }
 
-/* Filtros */
+/* Filtros y botones (si no los tienes) */
 .filters {
   display: flex;
   gap: 8px;
@@ -28,57 +71,38 @@
 }
 
 .filter-btn {
-  padding: 6px 12px;
-  border: 1px solid #e2e8f0;
+  padding: 8px 16px;
+  border: 1px solid #cbd5e1;
   background: white;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
-  font-size: 0.9em;
 }
 
 .filter-btn.active {
-  background: #dbeafe;
+  background: #3b82f6;
+  color: white;
   border-color: #3b82f6;
-  font-weight: bold;
 }
 
-/* ... (tu CSS existente de tabla y botón) */
-
-.calls-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: white;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+.btn-refresh {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin: 16px 0;
 }
 
-.calls-table th,
-.calls-table td {
-  padding: 12px 10px;
-  text-align: left;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.calls-table th {
-  background: #f8fafc;
-  font-weight: 600;
-  color: #334155;
-}
-
-.call-status.answered {
-  color: #16a34a;
-  font-weight: 600;
-}
-
-.call-status.missed {
-  color: #f59e0b;
+.btn-refresh:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
 }
 
 .pagination {
   display: flex;
   gap: 8px;
-  margin-top: 16px;
+  margin: 20px 0;
   justify-content: center;
   align-items: center;
 }
@@ -98,5 +122,5 @@
 
 .pagination span {
   font-weight: bold;
-  margin: 0 8px;
+  margin: 0 12px;
 }
