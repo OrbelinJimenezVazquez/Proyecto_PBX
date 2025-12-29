@@ -1,54 +1,46 @@
 // src/app/route-detail/route-detail.ts
-import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, ChangeDetectorRef } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { ApiService } from '../core/api.service';
 
 @Component({
   selector: 'app-route-detail',
-  standalone: true,
   templateUrl: './route-detail.html',
   styleUrls: ['./route-detail.css']
 })
-export class RouteDetailComponent implements OnInit, OnChanges {
-  @Input() routeNumber!: string;
+export class RouteDetailComponent {
+  @Input() routeNumber: string = '';
   @Output() close = new EventEmitter<void>();
-
+  
+  routeDetail: any = null;
   loading = false;
-  detail: any = null;
-  error: string | null = null;
+  error = '';
 
-  constructor(private api: ApiService, private cdr: ChangeDetectorRef) {}
+  constructor(private api: ApiService) {}
 
-  ngOnInit(): void {
-    if (this.routeNumber) {
-      this.fetchDetail();
-    }
+  ngOnInit() {
+    this.loadDetail();
   }
 
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['routeNumber'] && !changes['routeNumber'].firstChange) {
-      this.fetchDetail();
-    }
-  }
-
-  fetchDetail() {
+  loadDetail() {
+    if (!this.routeNumber) return;
+    
     this.loading = true;
-    this.error = null;
+    this.error = '';
+    
     this.api.getRouteDetail(this.routeNumber).subscribe({
       next: (data) => {
-        this.detail = data;
+        this.routeDetail = data;
         this.loading = false;
-        this.cdr.detectChanges();
       },
       error: (err) => {
-        console.error('Error al cargar detalle de ruta', err);
-        this.error = 'No se pudo cargar el detalle.';
+        console.error('Error:', err);
+        this.error = 'No se pudo cargar el detalle de la ruta.';
         this.loading = false;
-        this.cdr.detectChanges();
       }
     });
   }
 
-  onClose() {
+  closeModal() {
     this.close.emit();
   }
 }

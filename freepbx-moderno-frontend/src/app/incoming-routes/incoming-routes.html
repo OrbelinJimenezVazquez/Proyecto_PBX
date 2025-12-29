@@ -1,8 +1,8 @@
 <!-- //src/app/incoming-routes/incoming-routes.html-->
-<h1>Rutas Entrantes</h1>
+<h1> Rutas Entrantes</h1>
 
 <button (click)="loadRoutes()" [disabled]="loading" class="btn-refresh">
-   {{ loading ? 'Cargando...' : 'Actualizar' }}
+  {{ loading ? 'Cargando...' : 'Actualizar' }}
 </button>
 
 @if (loading) {
@@ -24,7 +24,7 @@
     <div class="table-body">
       @for (route of routes; track route.numero) {
         <div class="table-row">
-          <div class="number">{{ route.extension}}</div>
+          <div class="number">{{ route.extension }}</div>
           <div class="description">{{ route.descripcion }}</div>
           <div class="destination">
             <span class="dest-label">{{ route.destino_label }}</span>
@@ -43,7 +43,7 @@
 }
 
 <!-- Modal de detalle -->
-@if (showDetailModal && selectedRouteNumber) {
+@if (showDetailModal) {
   <app-route-detail 
     [routeNumber]="selectedRouteNumber"
     (close)="closeModal()">

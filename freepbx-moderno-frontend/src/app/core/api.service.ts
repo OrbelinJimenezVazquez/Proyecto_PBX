@@ -46,8 +46,8 @@ export class ApiService {
   }
 
   // Endpoint to get dashboard stats
-  getDashboardStats(): Observable<any> {
-    return this.http.get<any>(`${this.baseUrl}/dashboard/stats`); 
+  getAdvancedDashboardStats(): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/dashboard/advanced-stats`);
   }
 
   // Endpoint to get IVRs

@@ -1,5 +1,5 @@
 //src/app/incoming-routes/incoming-routes.ts
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef} from '@angular/core';
 import { ApiService } from '../core/api.service';
 import { RouteDetailComponent } from '../route-detail/route-detail';
 
@@ -7,16 +7,14 @@ import { RouteDetailComponent } from '../route-detail/route-detail';
   selector: 'app-incoming-routes',
   templateUrl: './incoming-routes.html',
   styleUrls: ['./incoming-routes.css'],
-  imports: [
-    RouteDetailComponent,
-  ],
+  imports: [RouteDetailComponent]
 })
 export class IncomingRoutesComponent implements OnInit {
   routes: any[] = [];
   loading = false;
   
   // Para el modal
-  selectedRouteNumber: string | null = null;
+  selectedRouteNumber: string = '';
   showDetailModal = false;
 
   constructor(
@@ -31,6 +29,7 @@ export class IncomingRoutesComponent implements OnInit {
         this.routes = data || [];
         this.loading = false;
         this.cdr.detectChanges();
+
       },
       error: (err) => {
         console.error('Error al cargar rutas entrantes', err);
@@ -41,13 +40,13 @@ export class IncomingRoutesComponent implements OnInit {
   }
 
   viewDetails(route: any) {
-    this.selectedRouteNumber = route.extension ?? route.numero ?? '';
+    this.selectedRouteNumber = route.numero;
     this.showDetailModal = true;
   }
 
   closeModal() {
     this.showDetailModal = false;
-    this.selectedRouteNumber = null;
+    this.selectedRouteNumber = '';
   }
 
   ngOnInit(): void {

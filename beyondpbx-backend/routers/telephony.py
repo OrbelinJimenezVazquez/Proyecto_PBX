@@ -130,35 +130,80 @@ def get_trunks(db: Session = Depends(get_db)):
         for row in result
     ]
 
-# Este es el endpoint para Obtener estadísticas para el dashboard 
-@router.get("/dashboard/stats")
-def get_dashboard_stats(db: Session = Depends(get_db)):
+
+
+# Endpoint para Obtener estadísticas avanzadas para el dashboard
+@router.get("/dashboard/advanced-stats")
+def get_advanced_dashboard_stats(db: Session = Depends(get_db)):
     now = datetime.now()
-    start_of_day = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    start_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-
-    # Llamadas hoy
-    today_calls = db.execute(text("""
-        SELECT COUNT(*), AVG(duration), 
-               SUM(CASE WHEN disposition = 'ANSWERED' THEN 1 ELSE 0 END)
+    
+    # 1. Métricas generales (ya las tenías)
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    
+    today_stats = db.execute(text("""
+        SELECT 
+            COUNT(*), 
+            AVG(duration), 
+            SUM(CASE WHEN disposition = 'ANSWERED' THEN 1 ELSE 0 END)
         FROM asteriskcdrdb.cdr 
         WHERE calldate >= :start_date
-    """), {"start_date": start_of_day}).fetchone()
-
-    calls_this_week = db.execute(text("""
-        SELECT COUNT(*)
+    """), {"start_date": today_start}).fetchone()
+    
+    month_stats = db.execute(text("""
+        SELECT COUNT(*) FROM asteriskcdrdb.cdr WHERE calldate >= :start_date
+    """), {"start_date": month_start}).fetchone()
+    
+    # 2. Llamadas por hora (últimas 24 horas)
+    hourly_calls = db.execute(text("""
+        SELECT 
+            HOUR(calldate) as hour,
+            COUNT(*) as calls
         FROM asteriskcdrdb.cdr
-        WHERE calldate >= :start_date
-    """), {"start_date": now - timedelta(days=7)}).fetchone()
-
-    # Llamadas este mes
-    month_calls = db.execute(text("""
-        SELECT COUNT(*)
-        FROM asteriskcdrdb.cdr 
-        WHERE calldate >= :start_date
-    """), {"start_date": start_of_month}).fetchone()
-
-    # Extensiones activas (online)
+        WHERE calldate >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
+        GROUP BY HOUR(calldate)
+        ORDER BY hour
+    """)).fetchall()
+    
+    hourly_data = [{"hour": r[0], "calls": r[1]} for r in hourly_calls]
+    
+    # 3. Distribución por destino (últimos 7 días)
+    destination_stats = db.execute(text("""
+        SELECT 
+            dst,
+            COUNT(*) as calls
+        FROM asteriskcdrdb.cdr
+        WHERE calldate >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+        GROUP BY dst
+        ORDER BY calls DESC
+        LIMIT 10
+    """)).fetchall()
+    
+    dest_data = [{"destination": r[0], "calls": r[1]} for r in destination_stats]
+    
+    # 4. Tasa de respuesta por día (últimos 7 días)
+    daily_stats = db.execute(text("""
+        SELECT 
+            DATE(calldate) as date,
+            COUNT(*) as total,
+            SUM(CASE WHEN disposition = 'ANSWERED' THEN 1 ELSE 0 END) as answered
+        FROM asteriskcdrdb.cdr
+        WHERE calldate >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+        GROUP BY DATE(calldate)
+        ORDER BY date
+    """)).fetchall()
+    
+    daily_data = [
+        {
+            "date": r[0].strftime('%Y-%m-%d'),
+            "total": r[1],
+            "answered": r[2] or 0,
+            "rate": round(((r[2] or 0) / r[1] * 100), 1) if r[1] > 0 else 0
+        }
+        for r in daily_stats
+    ]
+    
+    # 5. Extensiones activas (como ya tenías)
     active_extensions = db.execute(text("""
         SELECT COUNT(*)
         FROM asterisk.users u
@@ -167,19 +212,19 @@ def get_dashboard_stats(db: Session = Depends(get_db)):
         WHERE s_host.data IS NOT NULL 
           AND (s_host.data = 'dynamic' OR s_host.data REGEXP '^[0-9]{1,3}\\\\.[0-9]{1,3}\\\\.[0-9]{1,3}\\\\.[0-9]{1,3}$')
     """)).fetchone()
-
-    total_calls_today = today_calls[0] or 0
-    avg_duration = round(today_calls[1] or 0, 1)
-    answered_calls = today_calls[2] or 0
-    answer_rate = round((answered_calls / total_calls_today * 100), 1) if total_calls_today > 0 else 0
-
+    
     return {
-        "calls_today": total_calls_today,
-        "calls_this_week": calls_this_week[0] or 0,
-        "calls_this_month": month_calls[0] or 0,
-        "avg_duration": avg_duration,
-        "answer_rate": answer_rate,
-        "active_extensions": active_extensions[0] or 0
+        "general": {
+            "calls_today": today_stats[0] or 0,
+            "calls_this_month": month_stats[0] or 0,
+            "avg_duration": round(today_stats[1] or 0, 1),
+            "answered_calls": today_stats[2] or 0,
+            "answer_rate": round(((today_stats[2] or 0) / (today_stats[0] or 1) * 100), 1),
+            "active_extensions": active_extensions[0] or 0
+        },
+        "hourly_calls": hourly_data,
+        "destination_distribution": dest_data,
+        "daily_trends": daily_data
     }
 
 # Endpoint para Obtener lista de IVRs con sus opciones y estadísticas
@@ -282,7 +327,7 @@ def get_ivrs_with_stats(db: Session = Depends(get_db)):
     
     return result
 
-
+# Endpoint para Obtener lista de rutas entrantes con detalles y estadísticas
 @router.get("/incoming-routes")
 def list_incoming_routes(db: Session = Depends(get_db)):
     query = text(
@@ -339,6 +384,7 @@ def list_incoming_routes(db: Session = Depends(get_db)):
 
     return routes
 
+# Endpoint para Obtener detalle de una ruta entrante específica
 @router.get("/incoming-routes/{route_number}")
 def get_incoming_route_detail(route_number: str, db: Session = Depends(get_db)):
     # 1. Obtener información básica de la ruta

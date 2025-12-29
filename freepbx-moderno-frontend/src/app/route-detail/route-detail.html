@@ -1,22 +1,67 @@
 <!--//src/app/route-detail/route-detail.html-->
-<div class="modal-backdrop">
-  <div class="modal">
+<div class="modal-overlay" (click)="closeModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h2>Detalle de Ruta: {{ routeNumber }}</h2>
-      <button class="btn-close" (click)="onClose()">Cerrar</button>
+      <button (click)="closeModal()" class="btn-close">×</button>
     </div>
-
+    
     @if (loading) {
-      <p>Cargando detalle...</p>
+      <p class="loading">Cargando detalle...</p>
     } @else if (error) {
       <p class="error">{{ error }}</p>
-    } @else if (detail) {
+    } @else if (routeDetail) {
       <div class="modal-body">
-        <p><strong>DID:</strong> {{ detail.extension || detail.did || routeNumber }}</p>
-        <p><strong>Descripción:</strong> {{ detail.descripcion || detail.description }}</p>
-        <p><strong>Destino:</strong> {{ detail.destino_label || detail.dest_label }}</p>
-        <p><strong>Tipo de destino:</strong> {{ detail.destino_tipo || detail.dest_type }}</p>
-        <!-- Agrega aquí más campos según lo que retorne la API -->
+        <!-- Información básica -->
+        <div class="section">
+          <h3>Información General</h3>
+          <div class="info-grid">
+            <div><strong>Descripción:</strong> {{ routeDetail.route.descripcion }}</div>
+            <div><strong>Destino:</strong> {{ routeDetail.route.destino_label }}</div>
+            <div><strong>Tipo:</strong> {{ routeDetail.route.destino_tipo }}</div>
+            <div><strong>Extensión:</strong> {{ routeDetail.route.extension }}</div>
+            <div><strong>Alert Info:</strong> {{ routeDetail.route.alertinfo || 'N/A' }}</div>
+          </div>
+        </div>
+        
+        <!-- Estadísticas -->
+        <div class="section">
+          <h3>Estadísticas (últimos 30 días)</h3>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <h4>Total Llamadas</h4>
+              <p class="stat-value">{{ routeDetail.estadisticas.total_llamadas_30dias }}</p>
+            </div>
+            <div class="stat-card">
+              <h4>Contestadas</h4>
+              <p class="stat-value">{{ routeDetail.estadisticas.llamadas_contestadas }}</p>
+            </div>
+            <div class="stat-card">
+              <h4>Tasa de Respuesta</h4>
+              <p class="stat-value">{{ routeDetail.estadisticas.tasa_respuesta }}%</p>
+            </div>
+            <div class="stat-card">
+              <h4>Duración Promedio</h4>
+              <p class="stat-value">{{ routeDetail.estadisticas.duracion_promedio_seg }} seg</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Llamadas por día -->
+        @if (routeDetail.detalle_diario.length > 0) {
+          <div class="section">
+            <h3>Llamadas por Día (últimos 7 días)</h3>
+            <div class="daily-stats">
+              @for (day of routeDetail.detalle_diario; track day.date) {
+                <div class="day-row">
+                  <span class="date">{{ day.date }}</span>
+                  <span class="calls">Total: {{ day.calls }}</span>
+                  <span class="answered">Contestadas: {{ day.answered }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        }
       </div>
     }
   </div>
