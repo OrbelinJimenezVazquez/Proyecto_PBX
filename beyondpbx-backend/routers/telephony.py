@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query 
+from fastapi import APIRouter, Depends, HTTPException, Query 
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from database import get_db
@@ -145,6 +145,12 @@ def get_dashboard_stats(db: Session = Depends(get_db)):
         WHERE calldate >= :start_date
     """), {"start_date": start_of_day}).fetchone()
 
+    calls_this_week = db.execute(text("""
+        SELECT COUNT(*)
+        FROM asteriskcdrdb.cdr
+        WHERE calldate >= :start_date
+    """), {"start_date": now - timedelta(days=7)}).fetchone()
+
     # Llamadas este mes
     month_calls = db.execute(text("""
         SELECT COUNT(*)
@@ -169,6 +175,7 @@ def get_dashboard_stats(db: Session = Depends(get_db)):
 
     return {
         "calls_today": total_calls_today,
+        "calls_this_week": calls_this_week[0] or 0,
         "calls_this_month": month_calls[0] or 0,
         "avg_duration": avg_duration,
         "answer_rate": answer_rate,
@@ -274,3 +281,166 @@ def get_ivrs_with_stats(db: Session = Depends(get_db)):
         })
     
     return result
+
+
+@router.get("/incoming-routes")
+def list_incoming_routes(db: Session = Depends(get_db)):
+    query = text(
+        """
+        SELECT 
+            cidnum,
+            extension,
+            destination,
+            description,
+            alertinfo
+        FROM asterisk.incoming
+        ORDER BY cidnum
+        """
+    )
+
+    routes = []
+    for row in db.execute(query).fetchall():
+        cidnum = row[0]
+        extension = row[1]
+        destination = row[2] or ""
+        description = row[3]
+        alertinfo = row[4]
+
+        dest_type = "desconocido"
+        dest_data = destination
+        dest_label = destination
+
+        if destination:
+            parts = destination.split('/', 1)
+            if len(parts) == 2:
+                dest_type = parts[0]
+                dest_data = parts[1]
+
+                if dest_type == "from-did-direct":
+                    dest_label = f"Extensión → {dest_data}"
+                elif dest_type == "app-ivr":
+                    dest_label = f"IVR → {dest_data}"
+                elif dest_type == "app-queue":
+                    dest_label = f"Cola → {dest_data}"
+                else:
+                    dest_label = f"{dest_type} → {dest_data}"
+
+        routes.append(
+            {
+                "numero": cidnum,
+                "extension": extension,
+                "destino_tipo": dest_type,
+                "destino_dato": dest_data,
+                "destino_label": dest_label,
+                "descripcion": description,
+                "alertinfo": alertinfo,
+            }
+        )
+
+    return routes
+
+@router.get("/incoming-routes/{route_number}")
+def get_incoming_route_detail(route_number: str, db: Session = Depends(get_db)):
+    # 1. Obtener información básica de la ruta
+    route_query = text("""
+        SELECT 
+            cidnum,
+            extension,
+            destination,
+            description,
+            alertinfo
+        FROM asterisk.incoming
+        WHERE cidnum = :route_number
+        LIMIT 1
+    """)
+    route = db.execute(route_query, {"route_number": route_number}).fetchone()
+    
+    if not route:
+        raise HTTPException(status_code=404, detail="Ruta no encontrada")
+    
+    # Parsear destino (como hicimos antes)
+    destination = route[2] or ""
+    dest_type = "desconocido"
+    dest_data = destination
+    dest_label = destination
+    
+    if destination:
+        parts = destination.split('/', 1)
+        if len(parts) == 2:
+            dest_type = parts[0]
+            dest_data = parts[1]
+            
+            if dest_type == "from-did-direct":
+                dest_label = f"Extensión → {dest_data}"
+            elif dest_type == "app-ivr":
+                dest_label = f"IVR → {dest_data}"
+            elif dest_type == "app-queue":
+                dest_label = f"Cola → {dest_data}"
+            else:
+                dest_label = f"{dest_type} → {dest_data}"
+    
+    # 2. Estadísticas de las últimas 30 llamadas
+    stats_query = text("""
+        SELECT 
+            COUNT(*) as total_calls,
+            SUM(CASE WHEN disposition = 'ANSWERED' THEN 1 ELSE 0 END) as answered_calls,
+            AVG(billsec) as avg_duration,
+            MIN(calldate) as first_call,
+            MAX(calldate) as last_call
+        FROM asteriskcdrdb.cdr
+        WHERE dst = :destination
+        AND calldate >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+    """)
+    stats = db.execute(stats_query, {"destination": destination}).fetchone()
+    
+    total_calls = stats[0] or 0
+    answered_calls = stats[1] or 0
+    avg_duration = round(stats[2] or 0, 1)
+    first_call = stats[3]
+    last_call = stats[4]
+    
+    answer_rate = round((answered_calls / total_calls * 100), 1) if total_calls > 0 else 0
+    
+    # 3. Llamadas por día (últimos 7 días)
+    daily_query = text("""
+        SELECT 
+            DATE(calldate) as date,
+            COUNT(*) as calls,
+            SUM(CASE WHEN disposition = 'ANSWERED' THEN 1 ELSE 0 END) as answered
+        FROM asteriskcdrdb.cdr
+        WHERE dst = :destination
+        AND calldate >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+        GROUP BY DATE(calldate)
+        ORDER BY date DESC
+    """)
+    daily_stats = db.execute(daily_query, {"destination": destination}).fetchall()
+    
+    daily_calls = [
+        {
+            "date": row[0].strftime('%Y-%m-%d'),
+            "calls": row[1],
+            "answered": row[2]
+        }
+        for row in daily_stats
+    ]
+    
+    return {
+        "route": {
+            "numero": route[0],
+            "extension": route[1],
+            "destino_tipo": dest_type,
+            "destino_dato": dest_data,
+            "destino_label": dest_label,
+            "descripcion": route[3],
+            "alertinfo": route[4]
+        },
+        "estadisticas": {
+            "total_llamadas_30dias": total_calls,
+            "llamadas_contestadas": answered_calls,
+            "tasa_respuesta": answer_rate,
+            "duracion_promedio_seg": avg_duration,
+            "primera_llamada": first_call,
+            "ultima_llamada": last_call
+        },
+        "detalle_diario": daily_calls
+    }

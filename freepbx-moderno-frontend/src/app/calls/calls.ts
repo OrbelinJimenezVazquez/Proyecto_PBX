@@ -1,5 +1,5 @@
 // src/app/calls/calls.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { ApiService } from '../core/api.service';
 import { DatePipe } from '@angular/common';
 
@@ -21,7 +21,10 @@ export class CallsComponent implements OnInit {
   totalCalls = 0;
   pageSize = 50;
 
-  constructor(private api: ApiService) {}
+constructor(
+  private api: ApiService,
+  private cdr: ChangeDetectorRef
+) {}
 
   loadCalls(page: number = 1) {
     this.loading = true;
@@ -33,6 +36,7 @@ export class CallsComponent implements OnInit {
         this.totalCalls = response.total;
         this.totalPages = response.pages;
         this.loading = false;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Error al cargar llamadas', err);

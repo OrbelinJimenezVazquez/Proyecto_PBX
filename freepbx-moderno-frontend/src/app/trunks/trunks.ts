@@ -1,5 +1,5 @@
 // src/app/trunks/trunks.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { ApiService } from '../core/api.service';
 
 @Component({
@@ -12,7 +12,10 @@ export class TrunksComponent implements OnInit {
   trunks: any[] = [];
   loading = false;
 
-  constructor(private api: ApiService) {}
+  constructor(
+  private api: ApiService,
+  private cdr: ChangeDetectorRef,
+) {}
 
   loadTrunks() {
     console.log('loadTrunks ejecutado');
@@ -22,6 +25,7 @@ export class TrunksComponent implements OnInit {
         console.log('Troncales actualizadas:', data);
         this.trunks = data || [];
         this.loading = false;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Error:', err);

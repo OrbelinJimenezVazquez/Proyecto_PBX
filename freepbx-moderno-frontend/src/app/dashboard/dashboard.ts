@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { ApiService } from '../core/api.service';
 
 @Component({
@@ -11,7 +11,10 @@ export class DashboardComponent implements OnInit {
   stats: any = {};
   loading = false;
 
-  constructor(private api: ApiService) {}
+  constructor(
+  private api: ApiService,
+  private cdr: ChangeDetectorRef
+) {}
 
   loadStats() {
     this.loading = true;
@@ -19,6 +22,7 @@ export class DashboardComponent implements OnInit {
       next: (data) => {
         this.stats = data;
         this.loading = false;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Error:', err);

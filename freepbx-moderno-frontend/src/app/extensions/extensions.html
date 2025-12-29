@@ -1,10 +1,6 @@
 <!-- //src/app/extensions/extensions.html -->
  <h2>Extensiones</h2>
 
-<button (click)="loadExtensions()" [disabled]="loading" class="btn-refresh">
-  {{ loading ? 'Cargando...' : 'Actualizar' }}
-</button>
-
 @if (loading) {
   <p>Cargando extensiones....</p>
 } @else if (extensions.length === 0) {

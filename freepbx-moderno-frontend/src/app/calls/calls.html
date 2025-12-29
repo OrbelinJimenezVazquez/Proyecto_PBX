@@ -1,6 +1,8 @@
 <!-- //src/app/calls/calss.html-->
-<h2>📞 Llamadas Detalladas</h2>
-
+<h2>Llamadas Detalladas</h2> 
+<button (click)="loadCalls(currentPage)" [disabled]="loading" class="btn-refresh">
+  {{ loading ? 'Cargando...' : 'Recargar datos' }}
+</button>
 <!-- Filtros -->
 <div class="filters">
   <button 
@@ -27,13 +29,14 @@
     class="filter-btn">
     Último año
   </button>
+  
 </div>
 
 <!-- Resumen -->
 <p>
   Mostrando {{ calls.length }} de {{ totalCalls }} llamadas.
-  Página {{ currentPage }} de {{ totalPages }}.
 </p>
+
 
 <!-- Tabla -->
 @if (loading) {
@@ -97,8 +100,3 @@
     </div>
   }
 }
-
-<!-- Botón actualizar -->
-<button (click)="loadCalls(currentPage)" [disabled]="loading" class="btn-refresh">
-  🔄 {{ loading ? 'Cargando...' : 'Actualizar' }}
-</button>

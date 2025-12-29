@@ -1,5 +1,5 @@
 // src/app/extensions/extensions.component.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { ApiService } from '../core/api.service';
 
 @Component({
@@ -27,7 +27,10 @@ export class ExtensionsComponent implements OnInit {
   });
 }
 
-  constructor(private api: ApiService) {}
+  constructor(
+  private api: ApiService,
+  private cdr: ChangeDetectorRef,
+) {}
 
   ngOnInit(): void {
     this.api.getExtensions().subscribe({
@@ -36,6 +39,7 @@ export class ExtensionsComponent implements OnInit {
         console.log('Extensiones recibidas:', data);
         this.extensions = data;
         this.loading = false;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Error al cargar extensiones', err);

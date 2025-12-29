@@ -1,0 +1,23 @@
+<!--//src/app/route-detail/route-detail.html-->
+<div class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Detalle de Ruta: {{ routeNumber }}</h2>
+      <button class="btn-close" (click)="onClose()">Cerrar</button>
+    </div>
+
+    @if (loading) {
+      <p>Cargando detalle...</p>
+    } @else if (error) {
+      <p class="error">{{ error }}</p>
+    } @else if (detail) {
+      <div class="modal-body">
+        <p><strong>DID:</strong> {{ detail.extension || detail.did || routeNumber }}</p>
+        <p><strong>Descripción:</strong> {{ detail.descripcion || detail.description }}</p>
+        <p><strong>Destino:</strong> {{ detail.destino_label || detail.dest_label }}</p>
+        <p><strong>Tipo de destino:</strong> {{ detail.destino_tipo || detail.dest_type }}</p>
+        <!-- Agrega aquí más campos según lo que retorne la API -->
+      </div>
+    }
+  </div>
+</div>

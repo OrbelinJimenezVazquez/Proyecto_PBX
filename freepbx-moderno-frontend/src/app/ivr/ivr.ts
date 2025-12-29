@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+//src/app/ivr/ivr.ts
+import { Component, OnInit, ChangeDetectorRef} from '@angular/core';
 import { ApiService } from '../core/api.service';
 
 @Component({
@@ -10,7 +11,10 @@ export class IvrComponent implements OnInit {
   ivrs: any[] = [];
   loading = false;
 
-  constructor(private api: ApiService) {}
+  constructor(
+  private api: ApiService,
+  private cdr: ChangeDetectorRef,
+) {}
 
   loadIvrs() {
     this.loading = true;
@@ -18,6 +22,7 @@ export class IvrComponent implements OnInit {
       next: (data) => {
         this.ivrs = data || [];
         this.loading = false;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Error al cargar IVRs', err);

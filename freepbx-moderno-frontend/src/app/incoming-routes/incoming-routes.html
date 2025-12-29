@@ -1,0 +1,51 @@
+<!-- //src/app/incoming-routes/incoming-routes.html-->
+<h1>Rutas Entrantes</h1>
+
+<button (click)="loadRoutes()" [disabled]="loading" class="btn-refresh">
+   {{ loading ? 'Cargando...' : 'Actualizar' }}
+</button>
+
+@if (loading) {
+  <p>Cargando rutas entrantes...</p>
+} @else if (routes.length === 0) {
+  <p>No hay rutas entrantes configuradas.</p>
+} @else {
+  <p>{{ routes.length }} rutas entrantes encontradas.</p>
+  
+  <div class="routes-table">
+    <div class="table-header">
+      <div>DID</div>
+      <div>Descripción</div>
+      <div>Destino</div>
+      <div>Llamadas (último mes)</div>
+      <div>Detalles</div>
+    </div>
+    
+    <div class="table-body">
+      @for (route of routes; track route.numero) {
+        <div class="table-row">
+          <div class="number">{{ route.extension}}</div>
+          <div class="description">{{ route.descripcion }}</div>
+          <div class="destination">
+            <span class="dest-label">{{ route.destino_label }}</span>
+            <span class="dest-type">({{ route.destino_tipo }})</span>
+          </div>
+          <div class="calls">
+            <span class="call-count">{{ route.llamadas_ultimo_mes }}</span>
+          </div>
+          <div class="actions">
+            <button (click)="viewDetails(route)" class="btn-detail">Ver más</button>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+}
+
+<!-- Modal de detalle -->
+@if (showDetailModal && selectedRouteNumber) {
+  <app-route-detail 
+    [routeNumber]="selectedRouteNumber"
+    (close)="closeModal()">
+  </app-route-detail>
+}
