@@ -1,14 +1,52 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <meta charset="utf-8">
-  <title>FreepbxModernoFrontend</title>
+  <title>FreePBX Moderno</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#4338ca",
+            "primary-hover": "#3730a3",
+            "background-light": "#f3f4f6",
+            "background-dark": "#0f172a",
+            "sidebar-dark": "#1e1e2d",
+            "card-light": "#ffffff",
+            "card-dark": "#1e293b",
+          },
+          fontFamily: {
+            sans: ["Inter", "sans-serif"],
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    .custom-scrollbar::-webkit-scrollbar {
+      height: 6px;
+      width: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background-color: #cbd5e1;
+      border-radius: 20px;
+    }
+  </style>
 </head>
-<body>
+<body class="bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-200 font-sans antialiased transition-colors duration-200">
   <app-root></app-root>
 </body>
 </html>
