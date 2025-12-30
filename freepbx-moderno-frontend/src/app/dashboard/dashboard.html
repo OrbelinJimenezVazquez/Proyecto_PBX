@@ -1,100 +1,122 @@
-<!--// src/app/dashboard/dashboard.html -->
-<h1>Dashboard PBX </h1>
+<!--// src/app/dashboard/dashboard.html --><div #dashboardContainer class="dashboard-container">
+  <h1>Dashboard FreePBX Moderno</h1>
 
-<button (click)="loadStats()" [disabled]="loading" class="btn-refresh">
-  {{ loading ? 'Cargando...' : 'Actualizar' }}
+  <button (click)="loadStats()" [disabled]="loading" class="btn-refresh">
+    {{ loading ? 'Cargando...' : 'Actualizar' }}
+  </button>
+
+  @if (loading) {
+    <p>Cargando métricas...</p>
+  } @else {
+    <!-- Métricas generales -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <h3>Llamadas hoy</h3>
+        <p class="stat-value">{{ stats.general.calls_today }}</p>
+      </div>
+      <div class="stat-card">
+        <h3>Llamadas esta semana</h3>
+        <p class="stat-value">{{ stats.general.calls_this_week }}</p>
+      </div>
+      <div class="stat-card">
+        <h3>Llamadas este mes</h3>
+        <p class="stat-value">{{ stats.general.calls_this_month }}</p>
+      </div>
+      <div class="stat-card">
+        <h3>Duración promedio</h3>
+        <p class="stat-value">{{ stats.general.avg_duration }} seg</p>
+      </div>
+      <div class="stat-card">
+        <h3>Tasa de respuesta</h3>
+        <p class="stat-value">{{ stats.general.answer_rate }}%</p>
+      </div>
+      <div class="stat-card">
+        <h3>Extensiones activas</h3>
+        <p class="stat-value">{{ stats.general.active_extensions }}</p>
+      </div>
+    </div>
+
+    <!-- Gráficos principales -->
+    <div class="charts-container">
+      <div class="chart-card">
+        <h3>Estado de Llamadas</h3>
+        <canvas #statusChart></canvas>
+      </div>
+
+      <div class="chart-card">
+        <h3>Tiempos de Espera (promedio)</h3>
+        <canvas #waitChart></canvas>
+      </div>
+
+      <div class="chart-card">
+        <h3>Top Agentes (llamadas contestadas)</h3>
+        <canvas #agentChart></canvas>
+      </div>
+
+      <div class="chart-card">
+        <h3>Tendencia de Llamadas</h3>
+        <canvas #trendChart></canvas>
+      </div>
+
+      <div class="chart-card">
+        <h3>Distribución por Tipo</h3>
+        <canvas #destChart></canvas>
+      </div>
+    </div>
+
+    <!-- Gráficos avanzados -->
+    @if (!loadingAdvanced) {
+      <div class="advanced-charts-container">
+        <div class="chart-card">
+          <h3>Heatmap: Llamadas por hora y día</h3>
+          <canvas #heatmapChart></canvas>
+        </div>
+
+        <div class="chart-card">
+          <h3>Comparativa Mensual</h3>
+          <canvas #monthlyChart></canvas>
+        </div>
+      </div>
+    } @else {
+      <p>Cargando gráficos avanzados...</p>
+    }
+
+    <!-- Tabla de top agentes -->
+    <div class="table-card">
+      <h3>Top Agentes (últimos 7 días)</h3>
+      <div class="table-container">
+        <table class="agents-table">
+          <thead>
+            <tr>
+              <th>Agente</th>
+              <th>Extensión</th>
+              <th>Total Llamadas</th>
+              <th>Llamadas Contestadas</th>
+              <th>Tasa de Respuesta</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (agent of stats.top_agents; track agent.extension) {
+              <tr>
+                <td>{{ agent.name }}</td>
+                <td>{{ agent.extension }}</td>
+                <td>{{ agent.total_calls }}</td>
+                <td>{{ agent.answered_calls }}</td>
+                <td>{{ agent.answered_calls > 0 ? (agent.answered_calls / agent.total_calls * 100 | number:'1.1-1') : 0 }}%</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+</div>
+
+<!-- Añade este botón antes del botón PDF -->
+<button (click)="printDashboard()" class="btn-print" [disabled]="loading">
+  Imprimir
 </button>
 
-@if (loading) {
-  <p>Cargando métricas...</p>
-} @else {
-  <!-- Métricas generales -->
-  <div class="stats-grid">
-    <div class="stat-card">
-      <h3>Llamadas hoy</h3>
-      <p class="stat-value">{{ stats.general.calls_today }}</p>
-    </div>
-    <div class="stat-card">
-      <h3>Llamadas esta semana</h3>
-      <p class="stat-value">{{ stats.general.calls_this_week }}</p>
-    </div>
-    <div class="stat-card">
-      <h3>Llamadas este mes</h3>
-      <p class="stat-value">{{ stats.general.calls_this_month }}</p>
-    </div>
-    <div class="stat-card">
-      <h3>Duración promedio</h3>
-      <p class="stat-value">{{ stats.general.avg_duration }} seg</p>
-    </div>
-    <div class="stat-card">
-      <h3>Tasa de respuesta</h3>
-      <p class="stat-value">{{ stats.general.answer_rate }}%</p>
-    </div>
-    <div class="stat-card">
-      <h3>Extensiones activas</h3>
-      <p class="stat-value">{{ stats.general.active_extensions }}</p>
-    </div>
-  </div>
-
-  <!-- Gráficos principales -->
-  <div class="charts-container">
-    <div class="chart-card">
-      <h3>Estado de Llamadas</h3>
-      <canvas #statusChart></canvas>
-    </div>
-
-    <div class="chart-card">
-      <h3>Tiempos de Espera (promedio)</h3>
-      <canvas #waitChart></canvas>
-    </div>
-
-    <div class="chart-card">
-      <h3>Top Agentes (llamadas contestadas)</h3>
-      <canvas #agentChart></canvas>
-    </div>
-
-    <div class="chart-card">
-      <h3>Tendencia de Llamadas</h3>
-      <canvas #trendChart></canvas>
-    </div>
-
-    <div class="chart-card">
-      <h3>Distribución por Tipo</h3>
-      <canvas #destChart></canvas>
-    </div>
-  </div>
-
-  <!-- Tabla de top agentes -->
-  <div class="table-card">
-    <h3>Top Agentes (últimos 7 días)</h3>
-    <div class="table-container">
-      <table class="agents-table">
-        <thead>
-          <tr>
-            <th>Agente</th>
-            <th>Extensión</th>
-            <th>Total Llamadas</th>
-            <th>Llamadas Contestadas</th>
-            <th>Tasa de Respuesta</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (agent of stats.top_agents; track agent.extension) {
-            <tr>
-              <td>{{ agent.name }}</td>
-              <td>{{ agent.extension }}</td>
-              <td>{{ agent.total_calls }}</td>
-              <td>{{ agent.answered_calls }}</td>
-              <td>{{ agent.answered_calls > 0 ? (agent.answered_calls / agent.total_calls * 100 | number:'1.1-1') : 0 }}%</td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- Botón exportar PDF -->
-  <button (click)="downloadPdf()" class="btn-pdf">
-    Generar Informe PDF
-  </button>
-}
+<button (click)="downloadPdf()" class="btn-pdf" [disabled]="loading">
+  Generar Informe PDF
+</button>

@@ -1,3 +1,34 @@
+/* src/app/dashboard/dashboard.css */
+
+/* Estilo general mejorado */
+.dashboard-container {
+  padding: 20px;
+  background: #f8fafc;
+  min-height: 100vh;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.stat-card {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  text-align: center;
+  border-left: 4px solid #3b82f6;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -7,24 +38,37 @@
 
 .stat-card {
   background: white;
-  padding: 24px;
+  padding: 20px;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   text-align: center;
   border-left: 4px solid #3b82f6;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.stat-card h3 {
+  margin: 0 0 8px 0;
+  font-size: 0.9em;
+  color: #64748b;
 }
 
 .stat-value {
-  font-size: 2em;
+  font-size: 1.8em;
   font-weight: bold;
   color: #1e293b;
-  margin: 8px 0;
+  margin: 0;
 }
 
+/* Gráficos */
 .charts-container {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
   margin-top: 32px;
 }
 
@@ -33,12 +77,17 @@
   padding: 20px;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transition: transform 0.2s;
+}
+.chart-card:hover {
+  transform: translateY(-2px);
 }
 
 .chart-card h3 {
   margin-top: 0;
   color: #1e293b;
   text-align: center;
+  font-size: 1.1em;
 }
 
 canvas {
@@ -46,38 +95,36 @@ canvas {
   height: 250px !important;
 }
 
-.btn-pdf {
-  background: #f59e0b;
-  color: white;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 6px;
-  cursor: pointer;
-  margin-top: 24px;
-  font-weight: bold;
-  display: block;
-  margin: 24px auto;
-}
+/* Botones */
 
-.btn-pdf:hover {
-  background: #d97706;
-}
-
-.btn-refresh {
+.btn-refresh, .btn-pdf {
   background: #3b82f6;
   color: white;
   border: none;
-  padding: 8px 16px;
+  padding: 10px 20px;
   border-radius: 6px;
   cursor: pointer;
-  margin: 16px 0;
+  font-weight: 500;
+  transition: background 0.2s;
 }
 
-.btn-refresh:disabled {
+.btn-refresh:hover, .btn-pdf:hover {
+  background: #2563eb;
+}
+
+.btn-refresh:disabled, .btn-pdf:disabled {
   background: #94a3b8;
   cursor: not-allowed;
 }
 
+.btn-pdf {
+  margin-top: 24px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Tabla */
 .table-card {
   background: white;
   padding: 20px;
@@ -91,9 +138,11 @@ canvas {
   margin-top: 16px;
 }
 
+
 .agents-table {
   width: 100%;
   border-collapse: collapse;
+  margin-top: 16px;
 }
 
 .agents-table th,
@@ -112,6 +161,30 @@ canvas {
   background: #f1f5f9;
 }
 
+/* Añade estilos para gráficos avanzados */
+.advanced-charts-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-top: 32px;
+}
+
+/* Estilo para mejor captura de PDF */
+.dashboard-container {
+  background: white !important;
+  padding: 20px;
+  min-height: 100vh;
+}
+
+.chart-card {
+  background: white !important;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transition: transform 0.2s;
+}
+
+/* Responsive */
 @media (max-width: 1200px) {
   .charts-container {
     grid-template-columns: 1fr 1fr;
@@ -122,8 +195,57 @@ canvas {
   .charts-container {
     grid-template-columns: 1fr;
   }
-  
+    
+  .chart-card {
+    padding: 16px;
+  }
   .stats-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+    .advanced-charts-container {
     grid-template-columns: 1fr;
+  }
+  
+  .charts-container {
+    grid-template-columns: 1fr;
+  }
+
+}
+
+/* Estilos para impresión */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  
+  .dashboard-container, .dashboard-container * {
+    visibility: visible;
+  }
+  
+  .dashboard-container {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    background: white !important;
+  }
+  
+  .btn-refresh, .btn-pdf, nav, footer {
+    display: none !important;
+  }
+  
+  /* Ajustar gráficos para impresión */
+  canvas {
+    max-height: 200px !important;
+    width: 100% !important;
+  }
+  
+  /* Ajustar tabla para impresión */
+  .agents-table {
+    font-size: 0.8em;
+  }
+  
+  .agents-table th, .agents-table td {
+    padding: 6px;
   }
 }

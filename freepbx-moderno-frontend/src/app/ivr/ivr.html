@@ -1,4 +1,5 @@
-<h1>🎙️ Menús de Voz (IVR)</h1>
+<!-- src/app/ivr/ivr.html-->
+<h1>Menús de Voz (IVR)</h1>
 
 @if (loading) {
   <p>Cargando IVRs...</p>
@@ -9,7 +10,7 @@
     <div class="ivr-card">
       <h2>{{ ivr.name }}</h2>
       @if (ivr.announcement) {
-        <p class="ivr-announcement">🔈 Anuncio: "{{ ivr.announcement }}"</p>
+        <p class="ivr-announcement"> Anuncio: "{{ ivr.announcement }}"</p>
       }
       
       <div class="ivr-options">
@@ -19,7 +20,7 @@
             <div class="option-key">Presione <strong>{{ opt.option }}</strong></div>
             <div class="option-dest">{{ opt.dest_label }}</div>
             <div class="option-stats">
-              📞 {{ opt.calls_last_30_days }} llamadas (últimos 30 días)
+              {{ opt.calls_last_30_days }} llamadas (últimos 30 días)
             </div>
           </div>
         }

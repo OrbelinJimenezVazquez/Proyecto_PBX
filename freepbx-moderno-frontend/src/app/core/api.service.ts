@@ -3,7 +3,6 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-
 @Injectable({
   providedIn: 'root'
 })
@@ -13,7 +12,7 @@ export class ApiService {
   constructor(private http: HttpClient) {}
 
   // ENDOPOINTS
-    // Endpoint to get extensions
+    // Endpoint para obtener extensiones
   getExtensions(): Observable<any[]> {
     return this.http.get<any[]>(`${this.baseUrl}/extensions`);
   }
@@ -27,7 +26,7 @@ export class ApiService {
     return this.http.get<any>(`${this.baseUrl}/calls/detailed?period=${period}&page=${page}&size=${size}`);
   }
 
-    // Endpoint to get all calls
+  // Endpoint para obtener llamadas por medio del periodo
   getCallsByPeriod(
     period: 'today' | 'week' | 'month' | 'year' = 'month',
     page: number = 1,
@@ -35,31 +34,43 @@ export class ApiService {
   ): Observable<any> {
     return this.http.get<any>(`${this.baseUrl}/calls?period=${period}&page=${page}&size=${size}`);
   }
-    // Endpoint to get recent calls
+  
+  // Endpoint para obtner las llamadas recientes
   getRecentCalls(): Observable<any[]> {
     return this.http.get<any[]>(`${this.baseUrl}/calls/recent`);
   }
 
-    // Endpoint to get trunks
+  // Endpoint para obtener los troncales, Que son los toncales(trunks) estos son las lineas que conectan el PBx con la red telefonica.
   getTrunks(): Observable<any[]> {
-  return this.http.get<any[]>(`${this.baseUrl}/trunks`);
+    return this.http.get<any[]>(`${this.baseUrl}/trunks`);
   }
 
-  // Endpoint to get dashboard stats
+  // Endpoint para obtener las estadisticas avanzadas del dashboard
   getAdvancedDashboardStats(): Observable<any> {
     return this.http.get<any>(`${this.baseUrl}/dashboard/advanced-stats`);
   }
 
-  // Endpoint to get IVRs
+  // Endpoint para obtener los IVRs, que son los sistemas de respuesta de voz interactiva.
   getIvrs(): Observable<any[]> {
-  return this.http.get<any[]>(`${this.baseUrl}/ivrs`);
+    return this.http.get<any[]>(`${this.baseUrl}/ivrs`);
   }
-
+  // Endpoint para obtener las rutas entrantes
   getIncomingRoutes(): Observable<any[]> {
     return this.http.get<any[]>(`${this.baseUrl}/incoming-routes`);
   }
 
+  // Endpoint para obtener detalles de una ruta entrante específica
   getRouteDetail(routeNumber: string): Observable<any> {
-  return this.http.get<any>(`${this.baseUrl}/incoming-routes/${routeNumber}`);
+    return this.http.get<any>(`${this.baseUrl}/incoming-routes/${routeNumber}`);
+  }
+
+  // Endpoint para generar el reporte del dashboard en PDF
+  generateDashboardPdf(): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/dashboard/report/pdf`, { responseType: 'blob' });
+  }
+
+  // Endpoint para obtener datos para gráficos avanzados
+  getAdvancedChartsData(): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/dashboard/advanced-charts`);
   }
 }

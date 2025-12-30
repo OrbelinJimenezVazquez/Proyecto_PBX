@@ -311,6 +311,72 @@ def get_advanced_dashboard_stats(db: Session = Depends(get_db)):
         "destination_distribution": dest_data
     }
 
+# Endpoint para Obtener datos para gráficos avanzados del dashboard
+@router.get("/dashboard/advanced-charts")
+def get_advanced_charts_data(db: Session = Depends(get_db)):
+    now = datetime.now()
+    
+    # 1. Heatmap: llamadas por hora y día de la semana
+    heatmap_query = text("""
+        SELECT 
+            HOUR(calldate) as hour,
+            DAYOFWEEK(calldate) as day_of_week,
+            COUNT(*) as calls
+        FROM asteriskcdrdb.cdr
+        WHERE calldate >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+        GROUP BY HOUR(calldate), DAYOFWEEK(calldate)
+    """)
+    heatmap_data = db.execute(heatmap_query).fetchall()
+    
+    # Convertir a formato para heatmap (Chart.js necesita arrays)
+    hours = list(range(24))  # 0-23
+    days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
+    
+    # Crear matriz de datos
+    matrix_data = []
+    for hour in hours:
+        for day_idx, day_name in enumerate(days):
+            # Buscar si hay datos para esta combinación
+            value = 0
+            for row in heatmap_data:
+                if row[0] == hour and row[1] == (day_idx + 1):  # DAYOFWEEK es 1-7
+                    value = row[2]
+                    break
+            matrix_data.append({
+                'x': hour,
+                'y': day_name,
+                'v': value
+            })
+    
+    # 2. Comparativas mes vs mes (últimos 6 meses)
+    monthly_comparison = db.execute(text("""
+        SELECT 
+            DATE_FORMAT(calldate, '%Y-%m') as month,
+            COUNT(*) as total_calls,
+            SUM(CASE WHEN disposition = 'ANSWERED' THEN 1 ELSE 0 END) as answered_calls,
+            AVG(duration) as avg_duration
+        FROM asteriskcdrdb.cdr
+        WHERE calldate >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
+        GROUP BY DATE_FORMAT(calldate, '%Y-%m')
+        ORDER BY month
+    """)).fetchall()
+    
+    monthly_data = [
+        {
+            "month": row[0],
+            "total_calls": row[1],
+            "answered_calls": row[2] or 0,
+            "avg_duration": round(row[3] or 0, 1)
+        }
+        for row in monthly_comparison
+    ]
+    
+    return {
+        "heatmap": matrix_data,
+        "monthly_comparison": monthly_data
+    }
+
+
 # Endpoint para Obtener lista de IVRs con sus opciones y estadísticas
 @router.get("/ivrs")
 def get_ivrs_with_stats(db: Session = Depends(get_db)):

@@ -1,3 +1,4 @@
+/* src/app/calls/calls.css*/
 /* Contenedor de tabla responsivo */
 .table-container {
   overflow-x: auto;
@@ -62,7 +63,7 @@
   background: #e5e7eb;
 }
 
-/* Filtros y botones (si no los tienes) */
+/* Filtros y botones */
 .filters {
   display: flex;
   gap: 8px;
