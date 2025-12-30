@@ -7,7 +7,7 @@
   <p>No se encontraron extensiones.</p>
 } @else {
   <div class="extensions-list">
-    @for (ext of extensions; track $index) {
+    @for (ext of extensions; track ext.extension + '_' + ext.name) {
       <div class="extension-card">
         <div class="ext-header">
           <span class="ext-number">{{ ext.extension }}</span>
