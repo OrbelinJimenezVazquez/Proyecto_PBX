@@ -1,18 +1,24 @@
-<!--  //src/app/trunks/trunks.html -->
-<h2>Troncales SIP</h2>
+<!-- Versión más simple - Lista vertical -->
+<div class="p-4">
+  <h2 class="text-xl font-bold text-gray-800 mb-4">Troncales SIP</h2>
 
-@if (loading) {
-  <p>Cargando troncales...</p>
-} @else if (trunks.length === 0) {
-  <p>No se encontraron troncales.</p>
-} @else {
-  <div class="trunks-list">
-    @for (trunk of trunks; track $index) {
-      <div class="trunk-card">
-        <div class="trunk-name">{{ trunk.name }}</div>
-        <div class="trunk-tech">Tecnología: <strong>{{ trunk.tech }}</strong></div>
-        <div class="trunk-id">ID: {{ trunk.channelid }}</div>
-      </div>
-    }
-  </div>
-}
+  @if (loading) {
+    <p class="text-gray-500 text-center py-8">Cargando...</p>
+  } @else if (trunks.length === 0) {
+    <p class="text-gray-500 text-center py-8">No hay troncales.</p>
+  } @else {
+    <div class="space-y-3">
+      @for (trunk of trunks; track $index) {
+        <div class="bg-white border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+          <div class="flex justify-between items-center mb-2">
+            <span class="font-semibold text-gray-800">{{ trunk.name }}</span>
+            <span class="text-sm px-2 py-1 bg-blue-100 text-blue-800 rounded">
+              {{ trunk.tech }}
+            </span>
+          </div>
+          <div class="text-sm text-gray-600">ID: {{ trunk.channelid }}</div>
+        </div>
+      }
+    </div>
+  }
+</div>

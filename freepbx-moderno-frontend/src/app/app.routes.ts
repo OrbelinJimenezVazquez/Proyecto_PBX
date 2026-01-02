@@ -14,7 +14,7 @@ export const routes: Routes = [
   { path: 'extensions', component: ExtensionsComponent },
   { path: 'calls', component: CallsComponent },
   { path: 'trunks', component: TrunksComponent },
-  {path: 'ivrs', component: IvrComponent},
+  {path: 'ivr', component: IvrComponent},
 ];
   
 @NgModule({

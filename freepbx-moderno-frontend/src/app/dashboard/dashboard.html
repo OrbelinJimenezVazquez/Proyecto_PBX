@@ -1,24 +1,24 @@
-<!-- src/app/dashboard/dashbord.html-->
-<div #dashboardContainer class="space-y-6">
+<!-- src/app/dashboard/dashboard.html -->
+<div class="p-6 space-y-6">
   <!-- Header -->
-  <div class="flex flex-col md:flex-row md:items-center justify-between mb-8">
-    <div class="flex items-center mb-4 md:mb-0">
-      <span class="material-icons-outlined text-ocean-blue text-3xl mr-3">help_outline</span>
-      <h1 class="text-2xl font-bold text-black dark:text-white">Dashboard</h1>
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+    <div class="flex items-center gap-3">
+      <span class="material-icons-outlined text-[#2E86AB] text-2xl">dashboard</span>
+      <h1 class="text-2xl font-bold text-gray-800">Dashboard</h1>
     </div>
-    <div class="flex space-x-3">
+    <div class="flex gap-3">
       <button 
         (click)="downloadPdf()" 
         [disabled]="loading"
-        class="flex items-center px-4 py-2 border border-ocean-blue text-ocean-blue rounded-lg hover:bg-platinum dark:hover:bg-indigo-900/20 transition-colors text-sm font-medium">
-        <span class="material-icons-outlined text-lg mr-2">download</span>
-        Exportar PDF
+        class="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium">
+        <span class="material-icons-outlined text-lg">download</span>
+        Exportar
       </button>
       <button 
         (click)="loadStats()" 
         [disabled]="loading"
-        class="flex items-center px-4 py-2 bg-ocean-blue hover:bg-dark-teal text-white rounded-lg shadow-md transition-colors text-sm font-medium">
-        <span class="material-icons-outlined text-lg mr-2">refresh</span>
+        class="flex items-center gap-2 px-4 py-2 bg-[#2E86AB] hover:bg-[#257298] text-white rounded-lg transition-colors text-sm font-medium">
+        <span class="material-icons-outlined text-lg">refresh</span>
         {{ loading ? 'Cargando...' : 'Actualizar' }}
       </button>
     </div>
@@ -26,117 +26,126 @@
 
   <!-- Stats Grid -->
   @if (!loading) {
-    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
-      <div class="bg-bright-snow rounded-xl shadow-sm p-6 border-l-[6px] border-ocean-blue relative overflow-hidden transition-all duration-300 hover:shadow-md">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <!-- Llamadas Hoy -->
+      <div class="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
         <div class="flex justify-between items-start">
           <div>
-            <h2 class="text-3xl font-bold text-carbon-black mb-1">{{ stats.general?.calls_today || 0 }}</h2>
-            <p class="text-sm text-slate-grey mb-4">Llamadas Hoy</p>
+            <p class="text-sm text-gray-500 mb-1">Llamadas Hoy</p>
+            <p class="text-3xl font-bold text-gray-800">{{ stats.general?.calls_today || 0 }}</p>
           </div>
-          <div class="h-10 w-10 rounded-lg bg-ocean-blue text-white flex items-center justify-center shadow-lg shadow-ocean-blue dark:shadow-none">
-            <span class="material-icons-outlined">call</span>
+          <div class="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center">
+            <span class="material-icons-outlined text-blue-600">call</span>
           </div>
         </div>
       </div>
 
-      <div class="bg-bright-snow rounded-xl shadow-sm p-6 border-l-[6px] border-frozen-lake relative overflow-hidden transition-all duration-300 hover:shadow-md">
+      <!-- Llamadas Esta Semana -->
+      <div class="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
         <div class="flex justify-between items-start">
           <div>
-            <h2 class="text-3xl font-bold text-carbon-black mb-1">{{ stats.general?.calls_this_week || 0 }}</h2>
-            <p class="text-sm text-slate-grey mb-4">Llamadas Esta Semana</p>
+            <p class="text-sm text-gray-500 mb-1">Llamadas Esta Semana</p>
+            <p class="text-3xl font-bold text-gray-800">{{ stats.general?.calls_this_week || 0 }}</p>
           </div>
-          <div class="h-10 w-10 rounded-lg bg-frozen-lake text-white flex items-center justify-center shadow-lg shadow-frozen-lake dark:shadow-none">
-            <span class="material-icons-outlined">calendar_today</span>
+          <div class="h-10 w-10 rounded-lg bg-green-100 flex items-center justify-center">
+            <span class="material-icons-outlined text-green-600">calendar_today</span>
           </div>
         </div>
       </div>
 
-      <div class="bg-bright-snow rounded-xl shadow-sm p-6 border-l-[6px] border-medium-jungle relative overflow-hidden transition-all duration-300 hover:shadow-md">
+      <!-- Llamadas Este Mes -->
+      <div class="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
         <div class="flex justify-between items-start">
           <div>
-            <h2 class="text-3xl font-bold text-carbon-black mb-1">{{ stats.general?.calls_this_month || 0 }}</h2>
-            <p class="text-sm text-slate-grey mb-4">Llamadas Este Mes</p>
+            <p class="text-sm text-gray-500 mb-1">Llamadas Este Mes</p>
+            <p class="text-3xl font-bold text-gray-800">{{ stats.general?.calls_this_month || 0 }}</p>
           </div>
-          <div class="h-10 w-10 rounded-lg bg-medium-jungle text-white flex items-center justify-center shadow-lg shadow-medium-jungle dark:shadow-none">
-            <span class="material-icons-outlined">calendar_month</span>
+          <div class="h-10 w-10 rounded-lg bg-purple-100 flex items-center justify-center">
+            <span class="material-icons-outlined text-purple-600">calendar_month</span>
           </div>
         </div>
       </div>
 
-      <div class="bg-bright-snow rounded-xl shadow-sm p-6 border-l-[6px] border-amber-gold relative overflow-hidden transition-all duration-300 hover:shadow-md">
+      <!-- Tasa de Respuesta -->
+      <div class="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
         <div class="flex justify-between items-start">
           <div>
-            <h2 class="text-3xl font-bold text-carbon-black mb-1">{{ stats.general?.answer_rate || 0 }}%</h2>
-            <p class="text-sm text-slate-grey mb-4">Tasa de Respuesta</p>
+            <p class="text-sm text-gray-500 mb-1">Tasa de Respuesta</p>
+            <p class="text-3xl font-bold text-gray-800">{{ stats.general?.answer_rate || 0 }}%</p>
           </div>
-          <div class="h-10 w-10 rounded-lg bg-amber-gold text-white flex items-center justify-center shadow-lg shadow-amber-gold dark:shadow-none">
-            <span class="material-icons-outlined">trending_up</span>
+          <div class="h-10 w-10 rounded-lg bg-amber-100 flex items-center justify-center">
+            <span class="material-icons-outlined text-amber-600">trending_up</span>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Charts Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-      <div class="bg-bright-snow rounded-xl shadow-sm p-6">
-        <h3 class="text-lg font-semibold text-carbon-black mb-4">Estado de Llamadas</h3>
-        <div class="chart-container h-64">
-          <canvas #statusChart></canvas>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Estado de Llamadas -->
+      <div class="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Estado de Llamadas</h3>
+        <div class="h-64">
+          <canvas #statusChart class="w-full h-full"></canvas>
         </div>
       </div>
 
-      <div class="bg-bright-snow rounded-xl shadow-sm p-6">
-        <h3 class="text-lg font-semibold text-carbon-black mb-4">Tendencia de Llamadas</h3>
-        <div class="chart-container h-64">
-          <canvas #trendChart></canvas>
+      <!-- Tendencia de Llamadas -->
+      <div class="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Tendencia de Llamadas</h3>
+        <div class="h-64">
+          <canvas #trendChart class="w-full h-full"></canvas>
         </div>
       </div>
 
-      <div class="bg-bright-snow rounded-xl shadow-sm p-6">
-        <h3 class="text-lg font-semibold text-carbon-black mb-4">Top Agentes</h3>
-        <div class="chart-container h-64">
-          <canvas #agentChart></canvas>
+      <!-- Top Agentes -->
+      <div class="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Top Agentes</h3>
+        <div class="h-64">
+          <canvas #agentChart class="w-full h-full"></canvas>
         </div>
       </div>
 
-      <div class="bg-bright-snow rounded-xl shadow-sm p-6">
-        <h3 class="text-lg font-semibold text-carbon-black mb-4">Distribución por Tipo</h3>
-        <div class="chart-container h-64">
-          <canvas #destChart></canvas>
+      <!-- Distribución por Tipo -->
+      <div class="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Distribución por Tipo</h3>
+        <div class="h-64">
+          <canvas #destChart class="w-full h-full"></canvas>
         </div>
       </div>
     </div>
 
     <!-- Top Agents Table -->
-    <div class="bg-bright-snow rounded-xl shadow-sm   overflow-hidden">
-      <div class="p-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-        <h3 class="text-lg font-semibold text-carbon-black">Top Agentes (últimos 7 días)</h3>
-        <button class="text-ocean-blue hover:text-dark-teal font-medium text-sm px-4 py-2 border border-ocean-blue/30 rounded-lg hover:bg-ocean-blue/5 transition-colors w-full sm:w-auto text-center">
-          Ver Todos
-        </button>
+    <div class="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
+      <div class="p-5 border-b border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-800">Top Agentes (últimos 7 días)</h3>
       </div>
       <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
+        <table class="w-full">
           <thead>
-            <tr class="bg-platinum text-xs uppercase text-slate-grey font-semibold tracking-wider">
-              <th class="px-6 py-4">Agente</th>
-              <th class="px-6 py-4">Extensión</th>
-              <th class="px-6 py-4">Total Llamadas</th>
-              <th class="px-6 py-4">Contestadas</th>
-              <th class="px-6 py-4">Tasa de Respuesta</th>
+            <tr class="bg-gray-50 text-xs text-gray-600 font-medium">
+              <th class="px-6 py-3 text-left">Agente</th>
+              <th class="px-6 py-3 text-left">Extensión</th>
+              <th class="px-6 py-3 text-left">Total Llamadas</th>
+              <th class="px-6 py-3 text-left">Contestadas</th>
+              <th class="px-6 py-3 text-left">Tasa de Respuesta</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-slate-grey text-sm">
+          <tbody class="divide-y divide-gray-100 text-sm">
             @for (agent of stats.top_agents || []; track agent.extension) {
-              <tr class="hover:bg-platinum transition-colors">
-                <td class="px-6 py-4 font-medium text-carbon-black">{{ agent.name }}</td>
-                <td class="px-6 py-4 text-carbon-black">{{ agent.extension }}</td>
-                <td class="px-6 py-4 text-slate-grey">{{ agent.total_calls }}</td>
-                <td class="px-6 py-4 text-carbon-black font-medium">{{ agent.answered_calls }}</td>
+              <tr class="hover:bg-gray-50 transition-colors">
+                <td class="px-6 py-4 font-medium text-gray-800">{{ agent.name }}</td>
+                <td class="px-6 py-4 text-gray-700">{{ agent.extension }}</td>
+                <td class="px-6 py-4 text-gray-700">{{ agent.total_calls }}</td>
+                <td class="px-6 py-4 text-gray-700">{{ agent.answered_calls }}</td>
                 <td class="px-6 py-4">
-                  <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-medium-jungle text-white">
-                    {{ agent.answered_calls > 0 ? (agent.answered_calls / agent.total_calls * 100 | number:'1.1-1') : 0 }}%
-                  </span>
+                  @if (agent.total_calls > 0) {
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      {{ (agent.answered_calls / agent.total_calls * 100 | number:'1.1-1') }}%
+                    </span>
+                  } @else {
+                    <span class="text-gray-500 text-sm">-</span>
+                  }
                 </td>
               </tr>
             }
@@ -145,8 +154,10 @@
       </div>
     </div>
   } @else {
-    <div class="flex justify-center items-center h-64">
-      <p class="text-slate-grey">Cargando métricas...</p>
+    <!-- Loading State -->
+    <div class="flex flex-col items-center justify-center py-16">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2E86AB] mb-4"></div>
+      <p class="text-gray-500">Cargando métricas...</p>
     </div>
   }
 </div>

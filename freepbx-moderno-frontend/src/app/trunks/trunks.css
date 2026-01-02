@@ -1,49 +1,18 @@
-/* //src/app/trunks/trunks.css */
-.trunks-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-top: 16px;
+/* src/app/trunks/trunks.css */
+:host {
+  display: block;
 }
 
-.trunk-card {
-  padding: 14px;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  background: white;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+/* Animación de pulso para estado */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
-.trunk-name {
-  font-weight: bold;
-  font-size: 1.1em;
-  color: #1e293b;
-  margin-bottom: 4px;
-}
-
-.trunk-tech {
-  color: #3b82f6;
-  font-size: 0.95em;
-}
-
-.trunk-id {
-  color: #64748b;
-  font-size: 0.9em;
-  margin-top: 4px;
-}
-
-/* Reutiliza el botón si ya lo tienes en styles.css */
-.btn-refresh {
-  background: #3b82f6;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  cursor: pointer;
-  margin-bottom: 16px;
-}
-
-.btn-refresh:disabled {
-  background: #94a3b8;
-  cursor: not-allowed;
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }

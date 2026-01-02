@@ -1,9 +1,9 @@
 /* src/app/layout/layout.css */
 
-    host {
-      display: block;
-      height: 100vh;
-    }
+host {
+  display: block;
+  height: 100vh;
+}
 
 /* Animación de brillo para el logo */
 @keyframes shimmer {

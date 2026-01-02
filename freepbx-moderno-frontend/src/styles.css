@@ -160,19 +160,18 @@ body {
   margin: 0 auto;
 }
 
-.btn-refresh {
-  background: #3b82f6;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 14px;
-  cursor: pointer;
-  margin-bottom: 16px;
-}
 
 .btn-refresh:disabled {
   background: #94a3b8;
   cursor: not-allowed;
 }
 
+.btn-refresh {
+  background: #2E86AB;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin: 16px 0;
+}

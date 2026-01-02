@@ -5,7 +5,7 @@ import { ApiService } from '../core/api.service';
 @Component({
   selector: 'app-ivr',
   templateUrl: './ivr.html',
-  styleUrls: ['./ivr.css']
+  styleUrls: ['./ivr.css'],
 })
 export class IvrComponent implements OnInit {
   ivrs: any[] = [];
