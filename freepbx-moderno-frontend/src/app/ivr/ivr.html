@@ -1,67 +1,142 @@
 <!-- src/app/ivr/ivr.html -->
-<div class="p-6">
-  <h1 class="text-2xl font-bold text-gray-800 mb-6">Menús de Voz (IVR)</h1>
+<div class="p-6 space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+    <div class="flex items-center gap-4">
+      <div class="w-12 h-12 rounded-2xl bg-[#2E86AB] flex items-center justify-center shadow-lg" style="background: linear-gradient(135deg, #2E86AB 0%, #56cfe1 100%);">
+        <span class="material-icons-outlined text-white text-2xl">record_voice_over</span>
+      </div>
+      <div>
+        <h1 class="text-3xl font-bold text-gray-800">Menús de Voz (IVR)</h1>
+        <p class="text-sm text-gray-500 mt-1">Sistema de respuesta de voz interactiva</p>
+      </div>
+    </div>
+    <button
+      (click)="loadIvrs()"
+      [disabled]="loading"
+      class="btn-primary">
+      <span class="material-icons-outlined text-lg">refresh</span>
+      {{ loading ? 'Cargando...' : 'Actualizar' }}
+    </button>
+  </div>
 
+  <!-- Estado de Carga -->
   @if (loading) {
-    <div class="text-center py-8">
-      <p class="text-gray-500">Cargando IVRs...</p>
+    <div class="flex flex-col items-center justify-center py-20">
+      <div class="spinner mb-4"></div>
+      <p class="text-gray-500 text-lg font-medium">Cargando IVRs...</p>
+      <p class="text-gray-400 text-sm mt-2">Por favor espere un momento</p>
     </div>
-  } @else if (ivrs.length === 0) {
-    <div class="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
-      <p class="text-gray-500">No hay IVRs configurados.</p>
+  }
+
+  <!-- Sin Resultados -->
+  @else if (ivrs.length === 0) {
+    <div class="bg-white rounded-2xl border border-gray-200 p-12 text-center shadow-lg">
+      <div class="w-20 h-20 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center mx-auto mb-4">
+        <span class="material-icons-outlined text-gray-400 text-4xl">voice_over_off</span>
+      </div>
+      <h3 class="text-xl font-semibold text-gray-800 mb-2">No hay IVRs configurados</h3>
+      <p class="text-gray-500">Configure menús de voz para mejorar la atención al cliente</p>
     </div>
-  } @else {
+  }
+
+  <!-- Lista de IVRs -->
+  @else {
     <div class="space-y-6">
       @for (ivr of ivrs; track ivr.id) {
-        <div class="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
-          <!-- Encabezado del IVR -->
-          <div class="flex items-center justify-between mb-4">
-            <h2 class="text-xl font-semibold text-teal-700">{{ ivr.name }}</h2>
-            <span class="text-xs px-3 py-1 bg-teal-100 text-teal-800 rounded-full font-medium">
-              {{ ivr.options.length }} opciones
-            </span>
-          </div>
-          
-          <!-- Anuncio -->
-          @if (ivr.announcement) {
-            <div class="mb-5 p-4 bg-teal-50 border-l-4 border-teal-500 rounded-r">
-              <p class="text-teal-700 italic">
-                <span class="font-medium">Anuncio:</span> "{{ ivr.announcement }}"
-              </p>
-            </div>
-          }
-          
-          <!-- Opciones -->
-          <div class="space-y-3">
-            <h3 class="text-lg font-medium text-gray-800 mb-3">Opciones:</h3>
-            @for (opt of ivr.options; track opt.option) {
-              <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors">
-                <div class="flex items-center space-x-4">
-                  <!-- Tecla -->
-                  <div class="flex flex-col items-center">
-                    <span class="text-xs text-gray-500">Presione</span>
-                    <span class="text-xl font-bold text-teal-700">{{ opt.option }}</span>
-                  </div>
-                  
-                  <!-- Separador -->
-                  <span class="text-gray-400">→</span>
-                  
-                  <!-- Destino -->
-                  <div>
-                    <span class="font-medium text-gray-800">{{ opt.dest_label }}</span>
-                  </div>
-                </div>
-                
-                <!-- Estadísticas -->
-                <div class="text-right">
-                  <div class="text-sm font-medium text-gray-700">{{ opt.calls_last_30_days }}</div>
-                  <div class="text-xs text-gray-500">llamadas (30 días)</div>
+        <div class="ivr-card-modern fade-in-up">
+          <!-- Header del IVR -->
+          <div class="ivr-header">
+            <div class="flex items-center gap-4">
+              <!-- Icono -->
+              <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#2E86AB] to-[#56cfe1] flex items-center justify-center shadow-lg">
+                <span class="material-icons-outlined text-white text-2xl">phone_in_talk</span>
+              </div>
+
+              <!-- Información -->
+              <div class="flex-1">
+                <h2 class="text-xl font-bold text-gray-800">{{ ivr.name }}</h2>
+                <div class="flex items-center gap-2 mt-1">
+                  <span class="text-sm text-gray-500">ID: {{ ivr.id }}</span>
+                  <span class="text-gray-300">•</span>
+                  <span class="ivr-badge-options">
+                    {{ ivr.options.length }} opciones
+                  </span>
                 </div>
               </div>
-            }
+            </div>
+          </div>
+
+          <!-- Anuncio -->
+          @if (ivr.announcement) {
+            <div class="ivr-announcement">
+              <div class="flex items-start gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center flex-shrink-0">
+                  <span class="material-icons-outlined text-blue-600 text-xl">campaign</span>
+                </div>
+                <div class="flex-1">
+                  <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Mensaje de Audio</p>
+                  <p class="text-sm text-gray-700 italic leading-relaxed">
+                    "{{ ivr.announcement }}"
+                  </p>
+                </div>
+              </div>
+            </div>
+          }
+
+          <!-- Opciones del IVR -->
+          <div class="ivr-options-section">
+            <div class="flex items-center gap-2 mb-4">
+              <span class="material-icons-outlined text-[#2E86AB]">dialpad</span>
+              <h3 class="text-lg font-semibold text-gray-800">Opciones del Menú</h3>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              @for (opt of ivr.options; track opt.option) {
+                <div class="ivr-option-card">
+                  <!-- Tecla -->
+                  <div class="flex items-center gap-4">
+                    <div class="ivr-key-button">
+                      <span class="text-2xl font-bold">{{ opt.option }}</span>
+                      <span class="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5">Tecla</span>
+                    </div>
+
+                    <!-- Flecha -->
+                    <div class="flex-shrink-0">
+                      <span class="material-icons-outlined text-gray-300 text-2xl">arrow_forward</span>
+                    </div>
+
+                    <!-- Destino -->
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center gap-2 mb-1">
+                        <span class="material-icons-outlined text-[#28A745] text-sm">phone_forwarded</span>
+                        <span class="text-sm font-semibold text-gray-800 truncate">
+                          {{ opt.dest_label }}
+                        </span>
+                      </div>
+                      <p class="text-xs text-gray-500">{{ opt.destination || 'Destino no especificado' }}</p>
+                    </div>
+
+                    <!-- Estadísticas -->
+                    <div class="flex-shrink-0 text-right">
+                      <div class="ivr-stats-badge">
+                        <span class="material-icons-outlined text-xs">call</span>
+                        {{ opt.calls_last_30_days }}
+                      </div>
+                      <p class="text-[10px] text-gray-400 mt-0.5">últimos 30 días</p>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
           </div>
         </div>
       }
+    </div>
+
+    <!-- Información adicional -->
+    <div class="text-center text-sm text-gray-500 mt-6">
+      <p>Mostrando {{ ivrs.length }} IVR{{ ivrs.length !== 1 ? 's' : '' }} configurado{{ ivrs.length !== 1 ? 's' : '' }}</p>
     </div>
   }
 </div>

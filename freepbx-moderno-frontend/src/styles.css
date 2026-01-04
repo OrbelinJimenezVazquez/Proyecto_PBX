@@ -2,8 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
-
-/* Paleta de colores original */
+/* ============================================
+   PALETA DE COLORES ORIGINAL
+   ============================================ */
 :root {
   --color-bright-snow: #F8F9FA;
   --color-frozen-lake: #6CCFF6;
@@ -15,7 +16,7 @@
   --color-medium-jungle: #28A745;
   --color-platinum: #E9ECEF;
   --color-slate-grey: #6C757D;
-  
+
   /* Variables para tema claro */
   --bg-primary: var(--color-bright-snow);
   --bg-secondary: white;
@@ -25,9 +26,19 @@
   --card-bg: white;
   --sidebar-bg: var(--color-dark-teal);
   --sidebar-text: white;
+
+  /* ⭐ NUEVAS VARIABLES PARA MEJORAS VISUALES */
+  --gradient-ocean: linear-gradient(135deg, #2E86AB 0%, #56cfe1 100%);
+  --gradient-teal: linear-gradient(135deg, #043742 0%, #2E86AB 100%);
+  --gradient-card-bg: linear-gradient(135deg, rgba(46, 134, 171, 0.05) 0%, rgba(86, 207, 225, 0.05) 100%);
+  --shadow-card: 0 8px 24px rgba(46, 134, 171, 0.12);
+  --shadow-card-hover: 0 12px 32px rgba(46, 134, 171, 0.18);
+  --border-subtle: rgba(46, 134, 171, 0.1);
 }
 
-/* Tema oscuro con tu paleta */
+/* ============================================
+   TEMA OSCURO CON TU PALETA
+   ============================================ */
 [data-theme="dark"] {
   --color-bright-snow: #F8F9FA;
   --color-frozen-lake: #6CCFF6;
@@ -39,7 +50,7 @@
   --color-medium-jungle: #28A745;
   --color-platinum: #E9ECEF;
   --color-slate-grey: #c1c4c7;
-  
+
   /* Variables para tema oscuro */
   --bg-primary: var(--color-carbon-black);
   --bg-secondary: #2d3748;
@@ -49,9 +60,16 @@
   --card-bg: #2d3748;
   --sidebar-bg: var(--color-dark-teal);
   --sidebar-text: var(--color-bright-snow);
+
+  /* Ajustar sombras para dark mode */
+  --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.3);
+  --shadow-card-hover: 0 12px 32px rgba(0, 0, 0, 0.4);
+  --border-subtle: rgba(255, 255, 255, 0.1);
 }
 
-/* Clases CSS globales con temas */
+/* ============================================
+   CLASES CSS GLOBALES CON TEMAS (TU CÓDIGO ORIGINAL)
+   ============================================ */
 .bg-primary { background-color: var(--bg-primary); }
 .bg-secondary { background-color: var(--bg-secondary); }
 .text-primary { color: var(--text-primary); }
@@ -60,7 +78,6 @@
 .card-bg { background-color: var(--card-bg); }
 .sidebar-bg { background-color: var(--sidebar-bg); }
 .sidebar-text { color: var(--sidebar-text); }
-
 
 /* Clases CSS globales para tu paleta */
 .bg-bright-snow { background-color: var(--color-bright-snow); }
@@ -96,7 +113,9 @@
 .border-platinum { border-color: var(--color-platinum); }
 .border-slate-grey { border-color: var(--color-slate-grey); }
 
-/* Estilos para canvas de gráficos */
+/* ============================================
+   ESTILOS PARA CANVAS DE GRÁFICOS (TU CÓDIGO ORIGINAL)
+   ============================================ */
 .chart-container {
   position: relative;
   width: 100%;
@@ -108,7 +127,9 @@
   height: 100% !important;
 }
 
-/* Botones con tu paleta */
+/* ============================================
+   BOTONES CON TU PALETA (TU CÓDIGO ORIGINAL)
+   ============================================ */
 .btn-bright-snow { background-color: var(--color-bright-snow); color: var(--color-carbon-black); }
 .btn-frozen-lake { background-color: var(--color-frozen-lake); color: var(--color-carbon-black); }
 .btn-ocean-blue { background-color: var(--color-ocean-blue); color: white; }
@@ -120,7 +141,7 @@
 .btn-platinum { background-color: var(--color-platinum); color: var(--color-carbon-black); }
 .btn-slate-grey { background-color: var(--color-slate-grey); color: white; }
 
-/* Hover states */
+/* Hover states (TU CÓDIGO ORIGINAL) */
 .btn-bright-snow:hover { background-color: var(--color-platinum); }
 .btn-frozen-lake:hover { background-color: var(--color-ocean-blue); }
 .btn-ocean-blue:hover { background-color: var(--color-dark-teal); }
@@ -132,7 +153,9 @@
 .btn-platinum:hover { background-color: var(--color-bright-snow); }
 .btn-slate-grey:hover { background-color: var(--color-carbon-black); }
 
-
+/* ============================================
+   BODY Y ESTILOS BÁSICOS (TU CÓDIGO ORIGINAL)
+   ============================================ */
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -140,7 +163,7 @@ body {
   color: #1e293b;
 }
 
-.main-nav  {
+.main-nav {
   text-decoration: none;
   color: var(--color-platinum);
   border-radius: 6px;
@@ -160,18 +183,212 @@ body {
   margin: 0 auto;
 }
 
-
-.btn-refresh:disabled {
-  background: #94a3b8;
-  cursor: not-allowed;
-}
-
-.btn-refresh {
-  background: #2E86AB;
+/* ============================================
+   BOTÓN PRIMARY
+   ============================================ */
+.btn-primary {
+  background-color: #08687e;
   color: white;
   border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  box-shadow: 0 4px 12px rgba(46, 134, 171, 0.25);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
-  margin: 16px 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #0c94b3;
+  box-shadow: 0 6px 20px rgba(46, 134, 171, 0.35);
+  transform: translateY(-2px);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ============================================
+   ⭐ NUEVOS ESTILOS GLOBALES PARA COMPONENTES MEJORADOS
+   ============================================ */
+
+/* Spinner de carga global */
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(46, 134, 171, 0.2);
+  border-top-color: var(--color-ocean-blue);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Animación fade in up global */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+/* Delays escalonados para múltiples elementos */
+.fade-in-up:nth-child(1) { animation-delay: 0.1s; opacity: 0; }
+.fade-in-up:nth-child(2) { animation-delay: 0.2s; opacity: 0; }
+.fade-in-up:nth-child(3) { animation-delay: 0.3s; opacity: 0; }
+.fade-in-up:nth-child(4) { animation-delay: 0.4s; opacity: 0; }
+
+/* Scrollbar personalizado global */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-platinum);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--color-ocean-blue) 0%, var(--color-frozen-lake) 100%);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, var(--color-dark-teal) 0%, var(--color-ocean-blue) 100%);
+}
+
+/* Smooth scroll global */
+html {
+  scroll-behavior: smooth;
+}
+
+/* ============================================
+   CLASES UTILITARIAS GLOBALES
+   ============================================ */
+
+/* Sombras con tu paleta */
+.shadow-ocean-soft {
+  box-shadow: var(--shadow-card);
+}
+
+.shadow-ocean-hover {
+  box-shadow: var(--shadow-card-hover);
+}
+
+/* Bordes sutiles */
+.border-ocean-subtle {
+  border-color: var(--border-subtle);
+}
+
+/* Gradientes de fondo */
+.bg-gradient-ocean {
+  background: var(--gradient-ocean);
+}
+
+.bg-gradient-teal {
+  background: var(--gradient-teal);
+}
+
+.bg-gradient-card {
+  background: var(--gradient-card-bg);
+}
+
+/* Transiciones suaves */
+.transition-smooth {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.transition-fast {
+  transition: all 0.2s ease;
+}
+
+/* ============================================
+   UTILIDADES PARA TEXTOS
+   ============================================ */
+
+/* Texto con gradiente */
+.text-gradient-ocean {
+  background: var(--gradient-ocean);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Truncar texto */
+.text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ============================================
+   ESTADOS DE CARGA
+   ============================================ */
+
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.loading-skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(46, 134, 171, 0.1) 0%,
+    rgba(86, 207, 225, 0.2) 50%,
+    rgba(46, 134, 171, 0.1) 100%
+  );
+  background-size: 200% 200%;
+  animation: gradient-shift 2s ease infinite;
+  border-radius: 8px;
+}
+
+/* ============================================
+   MEJORAS DE ACCESIBILIDAD
+   ============================================ */
+
+/* Focus visible mejorado */
+*:focus-visible {
+  outline: 2px solid var(--color-ocean-blue);
+  outline-offset: 2px;
+}
+
+/* Reducir animaciones para usuarios que lo prefieran */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

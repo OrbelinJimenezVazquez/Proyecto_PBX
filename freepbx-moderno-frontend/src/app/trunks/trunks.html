@@ -1,24 +1,128 @@
-<!-- Versión más simple - Lista vertical -->
-<div class="p-4">
-  <h2 class="text-xl font-bold text-gray-800 mb-4">Troncales SIP</h2>
+<!-- src/app/trunks/trunks.html -->
+<div class="p-6 space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+    <div class="flex items-center gap-4">
+      <div class="w-12 h-12 rounded-2xl bg-[#2E86AB] flex items-center justify-center shadow-lg" style="background: linear-gradient(135deg, #2E86AB 0%, #56cfe1 100%);">
+        <span class="material-icons-outlined text-white text-2xl">router</span>
+      </div>
+      <div>
+        <h1 class="text-3xl font-bold text-gray-800">Troncales SIP</h1>
+        <p class="text-sm text-gray-500 mt-1">Conexiones con operadores telefónicos</p>
+      </div>
+    </div>
+    <button
+      (click)="loadTrunks()"
+      [disabled]="loading"
+      class="btn-primary">
+      <span class="material-icons-outlined text-lg">refresh</span>
+      {{ loading ? 'Cargando...' : 'Actualizar' }}
+    </button>
+  </div>
 
+  <!-- Estado de Carga -->
   @if (loading) {
-    <p class="text-gray-500 text-center py-8">Cargando...</p>
-  } @else if (trunks.length === 0) {
-    <p class="text-gray-500 text-center py-8">No hay troncales.</p>
-  } @else {
-    <div class="space-y-3">
+    <div class="flex flex-col items-center justify-center py-20">
+      <div class="spinner mb-4"></div>
+      <p class="text-gray-500 text-lg font-medium">Cargando troncales...</p>
+      <p class="text-gray-400 text-sm mt-2">Por favor espere un momento</p>
+    </div>
+  }
+
+  <!-- Sin Resultados -->
+  @else if (trunks.length === 0) {
+    <div class="bg-white rounded-2xl border border-gray-200 p-12 text-center shadow-lg">
+      <div class="w-20 h-20 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center mx-auto mb-4">
+        <span class="material-icons-outlined text-gray-400 text-4xl">settings_ethernet</span>
+      </div>
+      <h3 class="text-xl font-semibold text-gray-800 mb-2">No hay troncales configuradas</h3>
+      <p class="text-gray-500">Configure troncales SIP para conectar con operadores</p>
+    </div>
+  }
+    <!-- Lista de Troncales -->
+    <div class="space-y-4">
       @for (trunk of trunks; track $index) {
-        <div class="bg-white border rounded-lg p-4 hover:bg-gray-50 transition-colors">
-          <div class="flex justify-between items-center mb-2">
-            <span class="font-semibold text-gray-800">{{ trunk.name }}</span>
-            <span class="text-sm px-2 py-1 bg-blue-100 text-blue-800 rounded">
+        <div class="trunk-card-modern fade-in-up">
+          <!-- Header -->
+          <div class="flex items-center justify-between mb-4">
+            <!-- Información Principal -->
+            <div class="flex items-center gap-4">
+              <!-- Icono -->
+              <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#2E86AB] to-[#56cfe1] flex items-center justify-center shadow-lg">
+                <span class="material-icons-outlined text-white text-2xl">device_hub</span>
+              </div>
+
+              <!-- Nombre y ID -->
+              <div>
+                <h3 class="text-xl font-bold text-gray-800">{{ trunk.name }}</h3>
+                <div class="flex items-center gap-2 mt-1">
+                  <span class="text-sm text-gray-500">Canal ID:</span>
+                  <span class="text-sm font-mono font-semibold text-gray-700 bg-gray-100 px-2 py-0.5 rounded">
+                    {{ trunk.channelid }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Badge de Tecnología -->
+            <div class="trunk-tech-badge">
+              <span class="material-icons-outlined text-sm mr-1.5">settings</span>
               {{ trunk.tech }}
-            </span>
+            </div>
           </div>
-          <div class="text-sm text-gray-600">ID: {{ trunk.channelid }}</div>
+
+          <!-- Divisor -->
+          <div class="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-4"></div>
+
+          <!-- Detalles Técnicos -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <!-- ID del Canal -->
+            <div class="trunk-detail-item">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="material-icons-outlined text-[#2E86AB] text-lg">tag</span>
+                <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">ID Canal</span>
+              </div>
+              <p class="text-lg font-bold text-gray-800">{{ trunk.channelid }}</p>
+            </div>
+
+            <!-- Nombre -->
+            <div class="trunk-detail-item">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="material-icons-outlined text-[#2E86AB] text-lg">label</span>
+                <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Nombre</span>
+              </div>
+              <p class="text-lg font-bold text-gray-800">{{ trunk.name }}</p>
+            </div>
+
+            <!-- Tecnología -->
+            <div class="trunk-detail-item">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="material-icons-outlined text-[#2E86AB] text-lg">hub</span>
+                <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Tecnología</span>
+              </div>
+              <p class="text-lg font-bold text-gray-800">{{ trunk.tech }}</p>
+            </div>
+          </div>
+
+          <!-- Footer con Estado -->
+          <div class="mt-4 pt-4 border-t border-gray-100">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                <span class="text-sm text-gray-600">Troncal Activa</span>
+              </div>
+              <button class="trunk-action-btn">
+                <span class="material-icons-outlined text-base">info</span>
+                Ver detalles
+              </button>
+            </div>
+          </div>
         </div>
       }
     </div>
-  }
+
+    <!-- Información adicional -->
+    <div class="text-center text-sm text-gray-500 mt-6">
+      <p>Mostrando {{ trunks.length }} troncal{{ trunks.length !== 1 ? 'es' : '' }} configurada{{ trunks.length !== 1 ? 's' : '' }}</p>
+    </div>
 </div>

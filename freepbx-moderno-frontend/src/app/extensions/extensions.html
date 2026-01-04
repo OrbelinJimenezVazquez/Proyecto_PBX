@@ -1,14 +1,40 @@
 <!-- src/app/extensions/extensions.html -->
-<div class="p-6">
-  <h2 class="text-2xl font-bold text-gray-800 mb-6">Extensiones</h2>
-
-  @if (loading) {
-    <div class="text-center py-8">
-      <p class="text-gray-500">Cargando extensiones...</p>
+<div class="p-6 space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+    <div class="flex items-center gap-4">
+      <div class="w-12 h-12 rounded-2xl bg-[#2E86AB] flex items-center justify-center shadow-lg" style="background: linear-gradient(135deg, #2E86AB 0%, #56cfe1 100%);">
+        <span class="material-icons-outlined text-white text-2xl">phone</span>
+      </div>
+      <div>
+        <h1 class="text-3xl font-bold text-gray-800">Extensiones</h1>
+        <p class="text-sm text-gray-500 mt-1">Gestión de extensiones telefónicas</p>
+      </div>
     </div>
-  } @else if (extensions.length === 0) {
-    <div class="text-center py-8">
-      <p class="text-gray-500">No se encontraron extensiones.</p>
+    <button
+      (click)="loadExtensions()"
+      [disabled]="loading"
+      class="btn-primary">
+      <span class="material-icons-outlined text-lg">refresh</span>
+      {{ loading ? 'Cargando...' : 'Actualizar' }}
+    </button>
+  </div>
+
+  <!-- Estado de Carga -->
+  @if (loading) {
+    <div class="flex flex-col items-center justify-center py-20">
+      <div class="spinner mb-4"></div>
+      <p class="text-gray-500 text-lg font-medium">Cargando extensiones...</p>
+      <p class="text-gray-400 text-sm mt-2">Por favor espere un momento</p>
+    </div>
+  }  <!-- Sin Resultados -->
+  @else if (extensions.length === 0) {
+    <div class="bg-white rounded-2xl border border-gray-200 p-12 text-center shadow-lg">
+      <div class="w-20 h-20 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center mx-auto mb-4">
+        <span class="material-icons-outlined text-gray-400 text-4xl">phonelink_erase</span>
+      </div>
+      <h3 class="text-xl font-semibold text-gray-800 mb-2">No se encontraron extensiones</h3>
+      <p class="text-gray-500">No hay extensiones configuradas en el sistema</p>
     </div>
   } @else {
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">

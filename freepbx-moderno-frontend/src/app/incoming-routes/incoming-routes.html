@@ -1,72 +1,133 @@
 <!-- src/app/incoming-routes/incoming-routes.html -->
-<div class="p-6">
-  <div class="flex justify-between items-center mb-6">
-    <h1 class="text-2xl font-bold text-gray-800">Rutas Entrantes</h1>
-    <button 
-      (click)="loadRoutes()" 
-      [disabled]="loading" 
-      class="px-4 py-2 bg-[#2E86AB] text-white rounded-lg hover:bg-[#257298] disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+<div class="p-6 space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+    <div class="flex items-center gap-4">
+      <div class="w-12 h-12 rounded-2xl bg-[#2E86AB] flex items-center justify-center shadow-lg" style="background: linear-gradient(135deg, #2E86AB 0%, #56cfe1 100%);">
+        <span class="material-icons-outlined text-white text-2xl">call_received</span>
+      </div>
+      <div>
+        <h1 class="text-3xl font-bold text-gray-800">Rutas Entrantes</h1>
+        <p class="text-sm text-gray-500 mt-1">Gestión de números DID y enrutamiento</p>
+      </div>
+    </div>
+    <button
+      (click)="loadRoutes()"
+      [disabled]="loading"
+      class="btn-primary">
+      <span class="material-icons-outlined text-lg">refresh</span>
       {{ loading ? 'Cargando...' : 'Actualizar' }}
     </button>
   </div>
 
+  <!-- Estado de Carga -->
   @if (loading && routes.length === 0) {
-    <div class="text-center py-8">
-      <p class="text-gray-500">Cargando rutas entrantes...</p>
+    <div class="flex flex-col items-center justify-center py-20">
+      <div class="spinner mb-4"></div>
+      <p class="text-gray-500 text-lg font-medium">Cargando rutas entrantes...</p>
+      <p class="text-gray-400 text-sm mt-2">Por favor espere un momento</p>
     </div>
-  } @else if (routes.length === 0) {
-    <div class="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg p-8">
-      <p class="text-gray-500">No hay rutas entrantes configuradas.</p>
-    </div>
-  } @else {
-    <div class="mb-4">
-      <p class="text-gray-600">{{ routes.length }} rutas entrantes encontradas.</p>
-    </div>
-    
-    <div class="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
-      <!-- Header de la tabla -->
-      <div class="grid grid-cols-12 gap-4 px-6 py-3 bg-gray-50 border-b border-gray-200">
-        <div class="col-span-2 font-medium text-gray-700">DID</div>
-        <div class="col-span-3 font-medium text-gray-700">Descripción</div>
-        <div class="col-span-3 font-medium text-gray-700">Destino</div>
-        <div class="col-span-2 font-medium text-gray-700 text-center">Llamadas (último mes)</div>
-        <div class="col-span-2 font-medium text-gray-700 text-center">Detalles</div>
+  }
+
+  <!-- Sin Resultados -->
+  @else if (routes.length === 0) {
+    <div class="bg-white rounded-2xl border border-gray-200 p-12 text-center shadow-lg">
+      <div class="w-20 h-20 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center mx-auto mb-4">
+        <span class="material-icons-outlined text-gray-400 text-4xl">call_missed</span>
       </div>
-      
-      <!-- Cuerpo de la tabla -->
-      <div class="divide-y divide-gray-100">
+      <h3 class="text-xl font-semibold text-gray-800 mb-2">No hay rutas entrantes configuradas</h3>
+      <p class="text-gray-500">Configure rutas para enrutar las llamadas entrantes</p>
+    </div>
+  }
+
+  <!-- Contenido Principal -->
+  @else {
+    <!-- Resumen -->
+    <div class="bg-white rounded-2xl border border-gray-200 p-5 shadow-lg">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
+          <span class="material-icons-outlined text-blue-600 text-xl">route</span>
+        </div>
+        <div>
+          <p class="text-sm text-gray-500">Total de Rutas Configuradas</p>
+          <p class="text-2xl font-bold text-gray-800">{{ routes.length }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabla Moderna -->
+    <div class="routes-table-modern">
+      <!-- Header -->
+      <div class="routes-table-header">
+        <div class="route-col-did">
+          <span class="material-icons-outlined text-base mr-2">phone</span>
+          DID / Número
+        </div>
+        <div class="route-col-desc">
+          <span class="material-icons-outlined text-base mr-2">description</span>
+          Descripción
+        </div>
+        <div class="route-col-dest">
+          <span class="material-icons-outlined text-base mr-2">place</span>
+          Destino
+        </div>
+        <div class="route-col-calls">
+          <span class="material-icons-outlined text-base mr-2">call</span>
+          Llamadas
+        </div>
+        <div class="route-col-actions">
+          <span class="material-icons-outlined text-base mr-2">settings</span>
+          Acciones
+        </div>
+      </div>
+
+      <!-- Body -->
+      <div class="routes-table-body">
         @for (route of routes; track route.numero) {
-          <div class="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-gray-50 transition-colors">
+          <div class="route-row fade-in-up">
             <!-- DID -->
-            <div class="col-span-2">
-              <span class="font-semibold text-gray-900">{{ route.extension }}</span>
-            </div>
-            
-            <!-- Descripción -->
-            <div class="col-span-3">
-              <span class="text-gray-700">{{ route.descripcion }}</span>
-            </div>
-            
-            <!-- Destino -->
-            <div class="col-span-3">
-              <div class="flex flex-col">
-                <span class="font-medium text-teal-700">{{ route.destino_label }}</span>
-                <span class="text-xs text-gray-500 mt-1">({{ route.destino_tipo }})</span>
+            <div class="route-col-did">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#2E86AB] to-[#56cfe1] flex items-center justify-center flex-shrink-0">
+                  <span class="material-icons-outlined text-white text-lg">dialpad</span>
+                </div>
+                <div>
+                  <p class="text-sm font-bold text-gray-800">{{ route.extension }}</p>
+                  <p class="text-xs text-gray-500">DID Principal</p>
+                </div>
               </div>
             </div>
-            
-            <!-- Llamadas -->
-            <div class="col-span-2 flex items-center justify-center">
-              <span class="inline-flex items-center justify-center px-3 py-1 rounded-full bg-blue-100 text-blue-800 font-semibold text-sm">
-                {{ route.llamadas_ultimo_mes }}
-              </span>
+
+            <!-- Descripción -->
+            <div class="route-col-desc">
+              <p class="text-sm text-gray-700 font-medium">{{ route.descripcion }}</p>
             </div>
-            
+
+            <!-- Destino -->
+            <div class="route-col-dest">
+              <div class="route-destination-badge">
+                <span class="material-icons-outlined text-sm mr-1.5">arrow_forward</span>
+                <div>
+                  <p class="text-sm font-semibold">{{ route.destino_label }}</p>
+                  <p class="text-xs text-gray-500 mt-0.5">{{ route.destino_tipo }}</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Llamadas -->
+            <div class="route-col-calls">
+              <div class="route-calls-badge">
+                <span class="text-lg font-bold">{{ route.llamadas_ultimo_mes }}</span>
+                <span class="text-xs text-gray-500">último mes</span>
+              </div>
+            </div>
+
             <!-- Acciones -->
-            <div class="col-span-2 flex items-center justify-center">
-              <button 
-                (click)="viewDetails(route)" 
-                class="px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-colors">
+            <div class="route-col-actions">
+              <button
+                (click)="viewDetails(route)"
+                class="route-detail-btn">
+                <span class="material-icons-outlined text-base">visibility</span>
                 Ver más
               </button>
             </div>
@@ -76,9 +137,9 @@
     </div>
   }
 
-  <!-- Modal de detalle -->
+  <!-- Modal de Detalle -->
   @if (showDetailModal) {
-    <app-route-detail 
+    <app-route-detail
       [routeNumber]="selectedRouteNumber"
       (close)="closeModal()">
     </app-route-detail>

@@ -1,127 +1,328 @@
 <!-- src/app/calls/calls.html -->
-<div class="p-6">
-  <h2 class="text-2xl font-bold text-gray-800 mb-4">Llamadas Detalladas</h2>
-
-  <!-- Filtros y botón de refresh -->
-  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 p-4">
-    <div class="flex flex-wrap gap-2">
-      <button 
-        (click)="changePeriod('today')" 
-        [class.active]="currentPeriod === 'today'"
-        class="filter-btn">
-        Hoy
-      </button>
-      <button 
-        (click)="changePeriod('week')" 
-        [class.active]="currentPeriod === 'week'"
-        class="filter-btn">
-        Últimos 7 días
-      </button>
-      <button 
-        (click)="changePeriod('month')" 
-        [class.active]="currentPeriod === 'month'"
-        class="filter-btn">
-        Últimos 30 días
-      </button>
-      <button 
-        (click)="changePeriod('year')" 
-        [class.active]="currentPeriod === 'year'"
-        class="filter-btn">
-        Último año
-      </button>
+<div class="p-6 space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+    <div class="flex items-center gap-4">
+      <div class="w-12 h-12 rounded-2xl bg-[#2E86AB] flex items-center justify-center shadow-lg" style="background: linear-gradient(135deg, #2E86AB 0%, #56cfe1 100%);">
+        <span class="material-icons-outlined text-white text-2xl">call</span>
+      </div>
+      <div>
+        <h1 class="text-3xl font-bold text-gray-800">Llamadas Detalladas</h1>
+        <p class="text-sm text-gray-500 mt-1">Historial completo de llamadas del sistema</p>
+      </div>
     </div>
-    <button 
-      (click)="loadCalls(currentPage)" 
-      [disabled]="loading" 
-      class="btn-refresh">
-      {{ loading ? 'Cargando...' : 'Recargar datos' }}
-    </button>
   </div>
 
-  <!-- Resumen -->
-  <p class="text-gray-600 mb-6">
-    Mostrando {{ calls.length }} de {{ totalCalls }} llamadas.
-  </p>
+  <!-- Filtros y Refresh -->
+  <div class="bg-white rounded-2xl border border-gray-200 p-5 shadow-lg">
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <!-- Filtros de Periodo -->
+      <div class="flex flex-wrap gap-2">
+        <button
+          (click)="changePeriod('today')"
+          [class.filter-active]="currentPeriod === 'today'"
+          class="filter-btn">
+          <span class="material-icons-outlined text-base mr-1.5">today</span>
+          Hoy
+        </button>
+        <button
+          (click)="changePeriod('week')"
+          [class.filter-active]="currentPeriod === 'week'"
+          class="filter-btn">
+          <span class="material-icons-outlined text-base mr-1.5">date_range</span>
+          Últimos 7 días
+        </button>
+        <button
+          (click)="changePeriod('month')"
+          [class.filter-active]="currentPeriod === 'month'"
+          class="filter-btn">
+          <span class="material-icons-outlined text-base mr-1.5">calendar_month</span>
+          Últimos 30 días
+        </button>
+        <button
+          (click)="changePeriod('year')"
+          [class.filter-active]="currentPeriod === 'year'"
+          class="filter-btn">
+          <span class="material-icons-outlined text-base mr-1.5">event</span>
+          Último año
+        </button>
+      </div>
 
-  <!-- Tabla -->
+      <!-- Botón Refresh -->
+      <button
+        (click)="loadCalls(currentPage)"
+        [disabled]="loading"
+        class="btn-primary">
+        <span class="material-icons-outlined text-lg">refresh</span>
+        {{ loading ? 'Cargando...' : 'Recargar datos' }}
+      </button>
+    </div>
+
+    <!-- Resumen -->
+    <div class="mt-4 pt-4 border-t border-gray-100">
+      <div class="flex items-center gap-2 text-sm">
+        <span class="material-icons-outlined text-[#2E86AB] text-base">info</span>
+        <span class="text-gray-600">
+          Mostrando <span class="font-semibold text-gray-800">{{ calls.length }}</span> de
+          <span class="font-semibold text-gray-800">{{ totalCalls }}</span> llamadas
+        </span>
+        @if (totalPages > 1) {
+          <span class="text-gray-400">•</span>
+          <span class="text-gray-600">
+            Página <span class="font-semibold text-gray-800">{{ currentPage }}</span> de
+            <span class="font-semibold text-gray-800">{{ totalPages }}</span>
+          </span>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Estado de Carga -->
   @if (loading) {
-    <div class="text-center py-8">
-      <p class="text-gray-500">Cargando llamadas...</p>
+    <div class="flex flex-col items-center justify-center py-20">
+      <div class="spinner mb-4"></div>
+      <p class="text-gray-500 text-lg font-medium">Cargando llamadas...</p>
+      <p class="text-gray-400 text-sm mt-2">Por favor espere un momento</p>
     </div>
-  } @else if (calls.length === 0) {
-    <div class="text-center py-8">
-      <p class="text-gray-500">No hay llamadas en este período.</p>
+  }
+
+  <!-- Sin Resultados -->
+  @else if (calls.length === 0) {
+    <div class="bg-white rounded-2xl border border-gray-200 p-12 text-center shadow-lg">
+      <div class="w-20 h-20 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center mx-auto mb-4">
+        <span class="material-icons-outlined text-gray-400 text-4xl">call_end</span>
+      </div>
+      <h3 class="text-xl font-semibold text-gray-800 mb-2">No hay llamadas en este período</h3>
+      <p class="text-gray-500">Intenta seleccionar un rango de fechas diferente</p>
     </div>
-  } @else {
-    <div class="overflow-x-auto bg-white rounded-lg shadow-sm border border-gray-100">
-      <table class="min-w-full divide-y divide-gray-200">
-        <thead class="bg-gray-50">
-          <tr>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Número</th>
-            <th class="px 6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cola</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Número Agente</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Agente</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Evento</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Espera</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duración</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
-          </tr>
-        </thead>
-        <tbody class="bg-white divide-y divide-gray-100">
-          @for (call of calls; track call.uniqueid) {
-            <tr class="hover:bg-gray-50 transition-colors">
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-600">{{ call.fecha | date:'dd/MM/yyyy'}}</div>
-                <div class="text-sm font-bold text-black">{{ call.fecha | date:'shortTime' }}</div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900">{{ call.numero }}</div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                @if (call.cola === 'Sí') {
-                  <span class="tag-queue">Sí</span>
-                } @else {
-                  <span class="tag-no-queue">No</span>
-                }
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {{ call.numero_agente }}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {{ call.agente }}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <span [class.answered]="call.evento === 'ANSWERED'" 
-                      [class.missed]="call.evento !== 'ANSWERED'">
-                  {{ call.evento === 'ANSWERED' ? 'Contestada' : 'No contestada' }}
-                </span>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {{ call.tiempo_espera }} seg
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {{ call.tiempo_llamada }} seg
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm">
-                <button (click)="viewDetails(call)" class="btn-detail">
-                  Ver más
-                </button>
-              </td>
+  }
+
+  <!-- Tabla de Llamadas -->
+  @else {
+    <div class="calls-table-modern">
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr>
+              <th>
+                <div class="flex items-center gap-2">
+                  <span class="material-icons-outlined text-base">schedule</span>
+                  Fecha y Hora
+                </div>
+              </th>
+              <th>
+                <div class="flex items-center gap-2">
+                  <span class="material-icons-outlined text-base">phone</span>
+                  Número
+                </div>
+              </th>
+              <th>
+                <div class="flex items-center gap-2">
+                  <span class="material-icons-outlined text-base">queue</span>
+                  Cola
+                </div>
+              </th>
+              <th>
+                <div class="flex items-center gap-2">
+                  <span class="material-icons-outlined text-base">dialpad</span>
+                  Número Agente
+                </div>
+              </th>
+              <th>
+                <div class="flex items-center gap-2">
+                  <span class="material-icons-outlined text-base">person</span>
+                  Agente
+                </div>
+              </th>
+              <th>
+                <div class="flex items-center gap-2">
+                  <span class="material-icons-outlined text-base">check_circle</span>
+                  Estado
+                </div>
+              </th>
+              <th>
+                <div class="flex items-center gap-2">
+                  <span class="material-icons-outlined text-base">hourglass_empty</span>
+                  Espera
+                </div>
+              </th>
+              <th>
+                <div class="flex items-center gap-2">
+                  <span class="material-icons-outlined text-base">timer</span>
+                  Duración
+                </div>
+              </th>
+              <th>
+                <div class="flex items-center gap-2">
+                  <span class="material-icons-outlined text-base">more_horiz</span>
+                  Acciones
+                </div>
+              </th>
             </tr>
-          }
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            @for (call of calls; track call.uniqueid) {
+              <tr class="call-row">
+                <!-- Fecha y Hora -->
+                <td>
+                  <div class="flex flex-col">
+                    <span class="text-sm font-medium text-gray-800">{{ call.fecha | date:'dd/MM/yyyy' }}</span>
+                    <span class="text-xs text-gray-500 mt-0.5">{{ call.fecha | date:'HH:mm:ss' }}</span>
+                  </div>
+                </td>
+
+                <!-- Número -->
+                <td>
+                  <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-[#2E86AB] to-[#56cfe1] flex items-center justify-center">
+                      <span class="material-icons-outlined text-white text-sm">phone_in_talk</span>
+                    </div>
+                    <span class="font-medium text-gray-800">{{ call.numero }}</span>
+                  </div>
+                </td>
+
+                <!-- Cola -->
+                <td>
+                  @if (call.cola === 'Sí') {
+                    <span class="tag-queue">
+                      <span class="material-icons-outlined text-xs mr-1">queue_music</span>
+                      Sí
+                    </span>
+                  } @else {
+                    <span class="tag-no-queue">
+                      <span class="material-icons-outlined text-xs mr-1">remove</span>
+                      No
+                    </span>
+                  }
+                </td>
+
+                <!-- Número Agente -->
+                <td>
+                  <span class="text-sm font-mono text-gray-700 bg-gray-100 px-2.5 py-1 rounded-lg">
+                    {{ call.numero_agente }}
+                  </span>
+                </td>
+
+                <!-- Agente -->
+                <td>
+                  <div class="flex items-center gap-2">
+                    <div class="w-7 h-7 rounded-full bg-gradient-to-br from-[#28A745] to-[#34d399] flex items-center justify-center text-white text-xs font-bold">
+                      {{ call.agente.charAt(0).toUpperCase() }}
+                    </div>
+                    <span class="text-sm text-gray-800">{{ call.agente }}</span>
+                  </div>
+                </td>
+
+                <!-- Estado -->
+                <td>
+                  @if (call.evento === 'ANSWERED') {
+                    <span class="badge-answered">
+                      <span class="material-icons-outlined text-xs mr-1">call_received</span>
+                      Contestada
+                    </span>
+                  } @else {
+                    <span class="badge-missed">
+                      <span class="material-icons-outlined text-xs mr-1">call_missed</span>
+                      No contestada
+                    </span>
+                  }
+                </td>
+
+                <!-- Tiempo de Espera -->
+                <td>
+                  <div class="flex items-center gap-1.5">
+                    <div class="w-1.5 h-1.5 rounded-full"
+                         [class.bg-green-500]="call.tiempo_espera < 30"
+                         [class.bg-amber-500]="call.tiempo_espera >= 30 && call.tiempo_espera < 60"
+                         [class.bg-red-500]="call.tiempo_espera >= 60"></div>
+                    <span class="text-sm font-medium"
+                          [class.text-green-700]="call.tiempo_espera < 30"
+                          [class.text-amber-700]="call.tiempo_espera >= 30 && call.tiempo_espera < 60"
+                          [class.text-red-700]="call.tiempo_espera >= 60">
+                      {{ call.tiempo_espera }}s
+                    </span>
+                  </div>
+                </td>
+
+                <!-- Duración -->
+                <td>
+                  <span class="text-sm font-semibold text-gray-700">{{ call.tiempo_llamada }}s</span>
+                </td>
+
+                <!-- Acciones -->
+                <td>
+                  <button (click)="viewDetails(call)" class="btn-detail">
+                    <span class="material-icons-outlined text-base">visibility</span>
+                    Ver más
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <!-- Paginación -->
     @if (totalPages > 1) {
-      <div class="pagination">
-        <button (click)="goToPage(1)" [disabled]="currentPage === 1">Primera</button>
-        <button (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1">Anterior</button>
-        <span class="text-sm text-gray-600">Página {{ currentPage }} de {{ totalPages }}</span>
-        <button (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages">Siguiente</button>
-        <button (click)="goToPage(totalPages)" [disabled]="currentPage === totalPages">Última</button>
+      <div class="pagination-modern">
+        <div class="flex items-center justify-between">
+          <!-- Info de página -->
+          <div class="text-sm text-gray-600">
+            Mostrando <span class="font-semibold">{{ (currentPage - 1) * pageSize + 1 }}</span> a
+            <span class="font-semibold">{{ currentPage * pageSize > totalCalls ? totalCalls : currentPage * pageSize }}</span> de
+            <span class="font-semibold">{{ totalCalls }}</span> resultados
+          </div>
+
+          <!-- Botones de navegación -->
+          <div class="flex items-center gap-2">
+            <button
+              (click)="goToPage(1)"
+              [disabled]="currentPage === 1"
+              class="pagination-btn"
+              title="Primera página">
+              <span class="material-icons-outlined text-lg">first_page</span>
+            </button>
+
+            <button
+              (click)="goToPage(currentPage - 1)"
+              [disabled]="currentPage === 1"
+              class="pagination-btn"
+              title="Página anterior">
+              <span class="material-icons-outlined text-lg">chevron_left</span>
+            </button>
+
+            <!-- Números de página -->
+            <div class="flex items-center gap-1 mx-2">
+              @for (page of [currentPage - 1, currentPage, currentPage + 1]; track page) {
+                @if (page > 0 && page <= totalPages) {
+                  <button
+                    (click)="goToPage(page)"
+                    [class.pagination-active]="page === currentPage"
+                    class="pagination-number">
+                    {{ page }}
+                  </button>
+                }
+              }
+            </div>
+
+            <button
+              (click)="goToPage(currentPage + 1)"
+              [disabled]="currentPage === totalPages"
+              class="pagination-btn"
+              title="Página siguiente">
+              <span class="material-icons-outlined text-lg">chevron_right</span>
+            </button>
+
+            <button
+              (click)="goToPage(totalPages)"
+              [disabled]="currentPage === totalPages"
+              class="pagination-btn"
+              title="Última página">
+              <span class="material-icons-outlined text-lg">last_page</span>
+            </button>
+          </div>
+        </div>
       </div>
     }
   }

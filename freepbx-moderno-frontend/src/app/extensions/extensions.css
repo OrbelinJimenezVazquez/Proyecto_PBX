@@ -1,32 +1,227 @@
-/* src/app/extensions/extensions.component.css */
+/* src/app/extensions/extensions.css */
+/* ============================================
+   HOST
+   ============================================ */
 :host {
   display: block;
 }
 
-.extension-card {
-  @apply bg-white rounded-lg p-4 shadow-sm border border-gray-200 transition-all hover:shadow-md hover:border-gray-300;
+
+
+/* ============================================
+   CARD DE EXTENSIÓN MODERNA
+   ============================================ */
+.extension-card-modern {
+  background: white;
+  border-radius: 20px;
+  border: 1px solid var(--border-subtle);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-card);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
 }
 
-.extension-card:not(:last-child) {
-  @apply mb-0;
+/* Línea superior animada */
+.extension-card-modern::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--gradient-ocean);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s ease;
 }
 
-.ext-number {
-  @apply font-bold text-lg text-gray-900;
+.extension-card-modern:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover);
 }
 
-.ext-status {
-  @apply text-sm font-semibold px-2 py-1 rounded-full;
+.extension-card-modern:hover::before {
+  transform: scaleX(1);
 }
 
-.ext-status.online {
-  @apply bg-green-100 text-green-800;
+/* ============================================
+   BADGES DE ESTADO
+   ============================================ */
+.status-badge-online {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+  color: white;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
 }
 
-.ext-status.offline {
-  @apply bg-gray-100 text-gray-600;
+.status-badge-offline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 10px;
+  background: #f3f4f6;
+  color: #6b7280;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
 }
 
-.ext-name {
-  @apply text-gray-600 text-sm mt-1;
+/* ============================================
+   BOTONES DE ACCIÓN
+   ============================================ */
+.ext-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  padding: 0.625rem 1rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  border-radius: 10px;
+  border: 1.5px solid #e5e7eb;
+  background: white;
+  color: #4b5563;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.ext-action-btn:hover {
+  border-color: #2E86AB;
+  background: rgba(46, 134, 171, 0.05);
+  color: #2E86AB;
+  transform: translateY(-1px);
+}
+
+.ext-action-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 10px;
+  border: 1.5px solid #e5e7eb;
+  background: white;
+  color: #4b5563;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.ext-action-icon-btn:hover {
+  border-color: #2E86AB;
+  background: rgba(46, 134, 171, 0.05);
+  color: #2E86AB;
+  transform: translateY(-1px);
+}
+
+/* ============================================
+   SPINNER
+   ============================================ */
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(46, 134, 171, 0.2);
+  border-top-color: #2E86AB;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================
+   ANIMACIONES
+   ============================================ */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+/* Delays escalonados */
+.fade-in-up:nth-child(1) { animation-delay: 0.05s; opacity: 0; }
+.fade-in-up:nth-child(2) { animation-delay: 0.1s; opacity: 0; }
+.fade-in-up:nth-child(3) { animation-delay: 0.15s; opacity: 0; }
+.fade-in-up:nth-child(4) { animation-delay: 0.2s; opacity: 0; }
+.fade-in-up:nth-child(5) { animation-delay: 0.25s; opacity: 0; }
+.fade-in-up:nth-child(6) { animation-delay: 0.3s; opacity: 0; }
+.fade-in-up:nth-child(7) { animation-delay: 0.35s; opacity: 0; }
+.fade-in-up:nth-child(8) { animation-delay: 0.4s; opacity: 0; }
+
+/* Para más cards, continúa sin delay */
+.fade-in-up:nth-child(n+9) {
+  animation-delay: 0.4s;
+  opacity: 0;
+}
+
+/* ============================================
+   UTILIDADES
+   ============================================ */
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 1280px) {
+  .extension-card-modern {
+    padding: 1.25rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .extension-card-modern {
+    padding: 1rem;
+  }
+
+  .ext-action-btn {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+  }
+
+  .ext-action-icon-btn {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+}
+
+/* ============================================
+   ANIMACIÓN DEL PULSE
+   ============================================ */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }

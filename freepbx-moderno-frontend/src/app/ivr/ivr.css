@@ -1,18 +1,215 @@
 /* src/app/ivr/ivr.css */
+
+
+/* ============================================
+   HOST
+   ============================================ */
 :host {
   display: block;
 }
 
-/* Animación para skeleton loading */
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
+
+/* ============================================
+   CARD PRINCIPAL DEL IVR
+   ============================================ */
+.ivr-card-modern {
+  background: white;
+  border-radius: 24px;
+  border: 1px solid var(--border-subtle);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+  transition: all 0.3s ease;
+}
+
+.ivr-card-modern:hover {
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-2px);
+}
+
+/* ============================================
+   HEADER DEL IVR
+   ============================================ */
+.ivr-header {
+  padding: 1.75rem;
+  background: linear-gradient(135deg, rgba(46, 134, 171, 0.03) 0%, rgba(86, 207, 225, 0.03) 100%);
+  border-bottom: 1px solid rgba(46, 134, 171, 0.08);
+}
+
+/* ============================================
+   BADGE DE OPCIONES
+   ============================================ */
+.ivr-badge-options {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #2E86AB 0%, #56cfe1 100%);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(46, 134, 171, 0.2);
+}
+
+/* ============================================
+   ANUNCIO
+   ============================================ */
+.ivr-announcement {
+  padding: 1.5rem 1.75rem;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.03) 0%, rgba(147, 197, 253, 0.03) 100%);
+  border-bottom: 1px solid rgba(59, 130, 246, 0.08);
+}
+
+/* ============================================
+   SECCIÓN DE OPCIONES
+   ============================================ */
+.ivr-options-section {
+  padding: 1.75rem;
+}
+
+/* ============================================
+   CARD DE OPCIÓN
+   ============================================ */
+.ivr-option-card {
+  background: white;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 1.25rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ivr-option-card:hover {
+  border-color: #2E86AB;
+  background: linear-gradient(135deg, rgba(46, 134, 171, 0.02) 0%, rgba(86, 207, 225, 0.02) 100%);
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(46, 134, 171, 0.1);
+}
+
+/* ============================================
+   BOTÓN DE TECLA
+   ============================================ */
+.ivr-key-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 4rem;
+  height: 4rem;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #2E86AB 0%, #56cfe1 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(46, 134, 171, 0.25);
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.ivr-option-card:hover .ivr-key-button {
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(46, 134, 171, 0.35);
+}
+
+/* ============================================
+   BADGE DE ESTADÍSTICAS
+   ============================================ */
+.ivr-stats-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25);
+}
+
+/* ============================================
+   FOOTER DEL IVR
+   ============================================ */
+.ivr-footer {
+  padding: 1.5rem 1.75rem;
+  background: linear-gradient(135deg, rgba(46, 134, 171, 0.02) 0%, rgba(86, 207, 225, 0.02) 100%);
+  border-top: 1px solid rgba(46, 134, 171, 0.08);
+}
+
+/* ============================================
+   SPINNER
+   ============================================ */
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(46, 134, 171, 0.2);
+  border-top-color: #2E86AB;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 
-.animate-pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+/* ============================================
+   ANIMACIONES
+   ============================================ */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+.fade-in-up:nth-child(1) { animation-delay: 0.1s; opacity: 0; }
+.fade-in-up:nth-child(2) { animation-delay: 0.2s; opacity: 0; }
+.fade-in-up:nth-child(3) { animation-delay: 0.3s; opacity: 0; }
+.fade-in-up:nth-child(4) { animation-delay: 0.4s; opacity: 0; }
+
+/* ============================================
+   UTILIDADES
+   ============================================ */
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 1024px) {
+  .ivr-header,
+  .ivr-announcement,
+  .ivr-options-section,
+  .ivr-footer {
+    padding: 1.25rem;
+  }
+
+  .ivr-option-card {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .ivr-key-button {
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+
+  .ivr-option-card {
+    padding: 0.875rem;
+  }
+
+  .ivr-stats-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+  }
 }
