@@ -38,7 +38,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="C:\Users\orbelin.jimenez\Documents\Proyectos\Proyecto_PBX\freepbx-moderno-backend\venv"
+VIRTUAL_ENV="C:\Users\orbelin.jimenez\Documents\Proyectos\Proyecto_PBX\beyondpbx-backend\venv"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"
