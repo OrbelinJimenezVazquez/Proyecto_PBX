@@ -14,9 +14,6 @@ import { ExportService } from '../core/export.service'; //Exportar datos
   styleUrls: ['./trunks.css']
 })
 export class TrunksComponent implements OnInit {
-getTechnologies() {
-throw new Error('Method not implemented.');
-}
   trunks: any[] = [];
   loading = false;
 

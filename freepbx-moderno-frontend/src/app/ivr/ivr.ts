@@ -9,6 +9,7 @@ import { ExportService } from '../core/export.service';
 
 @Component({
   selector: 'app-ivr',
+  standalone: true,
   templateUrl: './ivr.html',
   styleUrls: ['./ivr.css'],
 })
@@ -31,7 +32,7 @@ export class IvrComponent implements OnInit {
       next: (data) => {
         this.ivrs = data || [];
         this.loading = false;
-        this.cdr.detectChanges();
+        this.cdr.detectChanges(); 
         this.toast.success(`${this.ivrs.length} IVRs cargados correctamente`); // Notificación de éxito
       },
       error: (err) => {

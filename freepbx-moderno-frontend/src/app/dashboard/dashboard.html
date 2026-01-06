@@ -1,7 +1,6 @@
 <!-- src/app/dashboard/dashboard.html -->
-
-<div class="p-6 space-y-6">
-  <!-- Header (mantener igual) -->
+<div class="p-6 space-y-6" #dashboardContainer>
+  <!-- Header -->
   <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
     <div class="flex items-center gap-4">
       <div class="w-12 h-12 rounded-[50px] m-2 bg-[#2E86AB] flex items-center justify-center shadow-lg">
@@ -16,21 +15,119 @@
       <button
         (click)="downloadPdf()"
         [disabled]="loading"
-        class="flex items-center gap-2 px-5 py-2.5 border border-gray-200 text-gray-700 rounded-[50px] hover:bg-gray-50 transition-all duration-300 font-medium shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
-        <span class="material-icons-outlined text-lg">download</span>
+        class="export-btn-secondary">
+        <span class="material-icons-round text-lg">download</span>
         Exportar
       </button>
       <button
         (click)="loadStats()"
         [disabled]="loading"
         class="btn-primary">
-        <span class="material-icons-outlined text-lg">refresh</span>
+        <span class="material-icons-round text-lg" [class.rotate-animation]="loading">refresh</span>
         {{ loading ? 'Cargando...' : 'Actualizar' }}
       </button>
     </div>
   </div>
 
-  <!-- ⭐ SKELETON LOADERS -->
+  <!-- Filtros de Dashboard -->
+  <div class="bg-white rounded-2xl border border-gray-200 p-5 shadow-lg">
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <!-- Filtros de Período -->
+      <div class="flex flex-wrap gap-2">
+        <button 
+          (click)="changePeriod('today')" 
+          [class.filter-active]="selectedPeriod === 'today'"
+          class="filter-btn">
+          <span class="material-icons-outlined text-base mr-1.5">today</span>
+          Hoy
+        </button>
+        <button 
+          (click)="changePeriod('week')" 
+          [class.filter-active]="selectedPeriod === 'week'"
+          class="filter-btn">
+          <span class="material-icons-outlined text-base mr-1.5">date_range</span>
+          7 días
+        </button>
+        <button 
+          (click)="changePeriod('month')" 
+          [class.filter-active]="selectedPeriod === 'month'"
+          class="filter-btn">
+          <span class="material-icons-outlined text-base mr-1.5">calendar_month</span>
+          30 días
+        </button>
+        <button 
+          (click)="changePeriod('year')" 
+          [class.filter-active]="selectedPeriod === 'year'"
+          class="filter-btn">
+          <span class="material-icons-outlined text-base mr-1.5">event</span>
+          1 año
+        </button>
+      </div>
+
+      <!-- Filtros de Tipo de Gráfica -->
+      <div class="flex items-center gap-3">
+        <div class="flex gap-2">
+          <button 
+            (click)="changeChartType('line')" 
+            [class.chart-type-active]="selectedChartType === 'line'"
+            class="chart-type-btn"
+            title="Gráfica de línea">
+            <span class="material-icons-outlined text-lg">show_chart</span>
+          </button>
+          <button 
+            (click)="changeChartType('bar')" 
+            [class.chart-type-active]="selectedChartType === 'bar'"
+            class="chart-type-btn"
+            title="Gráfica de barras">
+            <span class="material-icons-outlined text-lg">bar_chart</span>
+          </button>
+          <button 
+            (click)="changeChartType('area')" 
+            [class.chart-type-active]="selectedChartType === 'area'"
+            class="chart-type-btn"
+            title="Gráfica de área">
+            <span class="material-icons-outlined text-lg">area_chart</span>
+          </button>
+        </div>
+
+        <div class="h-6 w-px bg-gray-200"></div>
+
+        <button 
+          (click)="toggleComparison()"
+          [class.comparison-active]="showComparison"
+          class="comparison-btn">
+          <span class="material-icons-outlined text-base mr-1.5">compare</span>
+          Comparar
+        </button>
+      </div>
+    </div>
+
+    <!-- Info del período seleccionado -->
+    <div class="mt-4 pt-4 border-t border-gray-100">
+      <div class="flex items-center gap-2 text-sm text-gray-600">
+        <span class="material-icons-outlined text-[#2E86AB] text-base">info</span>
+        <span>
+          Mostrando datos de: 
+          <span class="font-semibold text-gray-800">
+            @if (selectedPeriod === 'today') {
+              Hoy
+            } @else if (selectedPeriod === 'week') {
+              Últimos 7 días
+            } @else if (selectedPeriod === 'month') {
+              Últimos 30 días
+            } @else {
+              Último año
+            }
+          </span>
+        </span>
+        @if (showComparison) {
+          <span class="text-gray-400">•</span>
+          <span class="text-[#10b981] font-medium">Con comparación activada</span>
+        }
+      </div>
+    </div>
+  </div>
+
   @if (loading) {
     <div class="space-y-6">
       <!-- Stats Cards Skeleton -->
@@ -55,64 +152,30 @@
           </div>
         }
       </div>
-
-      <!-- Table Skeleton -->
-      <div class="table-skeleton">
-        <div class="px-6 py-5 border-b border-gray-100">
-          <div class="skeleton-line medium"></div>
-        </div>
-        @for (i of [1,2,3,4,5]; track i) {
-          <div class="table-row-skeleton">
-            <div class="skeleton-cell"><div class="skeleton-line"></div></div>
-            <div class="skeleton-cell"><div class="skeleton-line short"></div></div>
-            <div class="skeleton-cell"><div class="skeleton-line short"></div></div>
-            <div class="skeleton-cell"><div class="skeleton-line short"></div></div>
-            <div class="skeleton-cell"><div class="skeleton-line medium"></div></div>
-          </div>
-        }
-      </div>
     </div>
   } @else {
     <!-- Stats Grid -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-      <!-- Llamadas Hoy -->
+      <!-- Llamadas del Período -->
       <div class="stat-card fade-in-up">
         <div class="flex justify-between items-start">
           <div class="flex-1">
-            <p class="text-sm font-medium text-gray-500 mb-2">Llamadas Hoy</p>
-            <p class="stat-value">{{ stats.general?.calls_today || 0 }}</p>
-            <p class="text-xs text-gray-400 mt-1">Actualizado ahora</p>
+            <p class="text-sm font-medium text-gray-500 mb-2">
+              @if (selectedPeriod === 'today') {
+                Llamadas Hoy
+              } @else if (selectedPeriod === 'week') {
+                Llamadas (7d)
+              } @else if (selectedPeriod === 'month') {
+                Llamadas (30d)
+              } @else {
+                Llamadas (1a)
+              }
+            </p>
+            <p class="stat-value">{{ stats.general?.calls_today || stats.general?.calls_this_week || stats.general?.calls_this_month || 0 }}</p>
+            <p class="text-xs text-gray-400 mt-1">Total del período</p>
           </div>
           <div class="stat-icon">
-            <span class="material-icons-outlined text-[#2E86AB] text-2xl relative z-10">call</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Llamadas Esta Semana -->
-      <div class="stat-card fade-in-up">
-        <div class="flex justify-between items-start">
-          <div class="flex-1">
-            <p class="text-sm font-medium text-gray-500 mb-2">Esta Semana</p>
-            <p class="stat-value">{{ stats.general?.calls_this_week || 0 }}</p>
-            <p class="text-xs text-gray-400 mt-1">Últimos 7 días</p>
-          </div>
-          <div class="stat-icon">
-            <span class="material-icons-outlined text-[#28A745] text-2xl relative z-10">calendar_today</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Llamadas Este Mes -->
-      <div class="stat-card fade-in-up">
-        <div class="flex justify-between items-start">
-          <div class="flex-1">
-            <p class="text-sm font-medium text-gray-500 mb-2">Este Mes</p>
-            <p class="stat-value">{{ stats.general?.calls_this_month || 0 }}</p>
-            <p class="text-xs text-gray-400 mt-1">Últimos 30 días</p>
-          </div>
-          <div class="stat-icon">
-            <span class="material-icons-outlined text-[#8b5cf6] text-2xl relative z-10">calendar_month</span>
+            <span class="material-icons-round text-[#2E86AB] text-2xl relative z-10">call</span>
           </div>
         </div>
       </div>
@@ -134,7 +197,35 @@
             </p>
           </div>
           <div class="stat-icon">
-            <span class="material-icons-outlined text-[#FFC107] text-2xl relative z-10">trending_up</span>
+            <span class="material-icons-round text-[#FFC107] text-2xl relative z-10">trending_up</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Duración Promedio -->
+      <div class="stat-card fade-in-up">
+        <div class="flex justify-between items-start">
+          <div class="flex-1">
+            <p class="text-sm font-medium text-gray-500 mb-2">Duración Promedio</p>
+            <p class="stat-value">{{ stats.general?.avg_duration || 0 }}<span class="text-base">s</span></p>
+            <p class="text-xs text-gray-400 mt-1">Por llamada</p>
+          </div>
+          <div class="stat-icon">
+            <span class="material-icons-outlined text-[#8b5cf6] text-2xl relative z-10">timer</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Extensiones Activas -->
+      <div class="stat-card fade-in-up">
+        <div class="flex justify-between items-start">
+          <div class="flex-1">
+            <p class="text-sm font-medium text-gray-500 mb-2">Extensiones Activas</p>
+            <p class="stat-value">{{ stats.general?.active_extensions || 0 }}</p>
+            <p class="text-xs text-gray-400 mt-1">En línea ahora</p>
+          </div>
+          <div class="stat-icon">
+            <span class="material-icons-round text-[#28A745] text-2xl relative z-10">phone_enabled</span>
           </div>
         </div>
       </div>
@@ -143,34 +234,57 @@
     <!-- Charts Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <!-- Estado de Llamadas -->
-      <div class="chart-card">
-        <h3>Estado de Llamadas</h3>
+      <div class="chart-card enhanced-chart-card">
+        <div class="chart-header">
+          <h3>Estado de Llamadas</h3>
+          <span class="chart-subtitle">Distribución por resultado</span>
+        </div>
         <div class="h-64">
           <canvas #statusChart class="w-full h-full"></canvas>
         </div>
       </div>
 
       <!-- Tendencia de Llamadas -->
-      <div class="chart-card">
-        <h3>Tendencia de Llamadas</h3>
+      <div class="chart-card enhanced-chart-card">
+        <div class="chart-header">
+          <h3>Tendencia de Llamadas</h3>
+          <span class="chart-subtitle">Evolución en el tiempo</span>
+        </div>
         <div class="h-64">
           <canvas #trendChart class="w-full h-full"></canvas>
         </div>
       </div>
 
       <!-- Top Agentes -->
-      <div class="chart-card">
-        <h3>Top Agentes</h3>
+      <div class="chart-card enhanced-chart-card">
+        <div class="chart-header">
+          <h3>Top Agentes</h3>
+          <span class="chart-subtitle">Llamadas contestadas</span>
+        </div>
         <div class="h-64">
           <canvas #agentChart class="w-full h-full"></canvas>
         </div>
       </div>
 
       <!-- Distribución por Tipo -->
-      <div class="chart-card">
-        <h3>Distribución por Tipo</h3>
+      <div class="chart-card enhanced-chart-card">
+        <div class="chart-header">
+          <h3>Distribución por Tipo</h3>
+          <span class="chart-subtitle">Destinos de llamadas</span>
+        </div>
         <div class="h-64">
           <canvas #destChart class="w-full h-full"></canvas>
+        </div>
+      </div>
+
+      <!-- Llamadas por Hora (Nueva) -->
+      <div class="chart-card enhanced-chart-card lg:col-span-2">
+        <div class="chart-header">
+          <h3>Distribución por Hora del Día</h3>
+          <span class="chart-subtitle">Volumen de llamadas</span>
+        </div>
+        <div class="h-64">
+          <canvas #hourlyChart class="w-full h-full"></canvas>
         </div>
       </div>
     </div>
@@ -180,7 +294,7 @@
       <div class="px-6 py-5 border-b border-gray-100">
         <div class="flex items-center gap-3">
           <span class="material-icons-outlined text-[#2E86AB]">emoji_events</span>
-          <h3 class="text-lg font-semibold text-gray-800">Top Agentes (últimos 7 días)</h3>
+          <h3 class="text-lg font-semibold text-gray-800">Top Agentes del Período</h3>
         </div>
       </div>
       <div class="overflow-x-auto">

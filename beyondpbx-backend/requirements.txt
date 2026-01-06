@@ -1,0 +1,20 @@
+# Backend Dependencies - BeyondPBX
+
+# Web Framework
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+
+# Database
+sqlalchemy==2.0.25
+pymysql==1.1.0
+cryptography==42.0.0  # Required by PyMySQL for secure connections
+
+# Environment Variables
+python-dotenv==1.0.0
+
+# Optional: For future features
+# python-jose[cryptography]==3.3.0  # JWT authentication
+# passlib[bcrypt]==1.7.4  # Password hashing
+# alembic==1.13.1  # Database migrations
+# redis==5.0.1  # Caching
+# celery==5.3.4  # Background tasks

@@ -97,59 +97,9 @@
   box-shadow: 0 2px 8px rgba(46, 134, 171, 0.15);
 }
 
-/* ============================================
-   SPINNER
-   ============================================ */
-.spinner {
-  width: 48px;
-  height: 48px;
-  border: 4px solid rgba(46, 134, 171, 0.2);
-  border-top-color: #2E86AB;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
 
-/* ============================================
-   ANIMACIONES
-   ============================================ */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 
-.fade-in-up {
-  animation: fadeInUp 0.5s ease-out forwards;
-}
-
-.fade-in-up:nth-child(1) { animation-delay: 0.1s; opacity: 0; }
-.fade-in-up:nth-child(2) { animation-delay: 0.2s; opacity: 0; }
-.fade-in-up:nth-child(3) { animation-delay: 0.3s; opacity: 0; }
-.fade-in-up:nth-child(4) { animation-delay: 0.4s; opacity: 0; }
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
-.animate-pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
 
 /* ============================================
    RESPONSIVE
@@ -173,4 +123,25 @@
   .trunk-detail-item {
     padding: 0.875rem;
   }
+}
+
+/* ============================================
+   DARK MODE - Trunks
+   ============================================ */
+[data-theme="dark"] .trunk-card-modern,
+[data-theme="dark"] .trunk-action-btn {
+  background: #1e293b;
+  border-color: #334155;
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .trunk-detail-item {
+  background: rgba(46, 134, 171, 0.08);
+  border-color: rgba(46, 134, 171, 0.2);
+}
+
+[data-theme="dark"] .trunk-action-btn:hover {
+  background: #334155;
+  border-color: #2E86AB;
+  color: #56cfe1;
 }

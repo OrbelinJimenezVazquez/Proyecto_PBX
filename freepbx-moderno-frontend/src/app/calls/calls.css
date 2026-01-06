@@ -1,84 +1,8 @@
 /* src/app/calls/calls.css */
 
 /* ============================================
-   BOTONES DE FILTRO
+   TABLA MODERNA DE LLAMADAS - Específica
    ============================================ */
-.filter-btn {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.625rem 1.25rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  border-radius: 50px;
-  border: 2px solid #e5e7eb;
-  background: white;
-  color: #4b5563;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-}
-
-.filter-btn::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: var(--gradient-ocean);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.filter-btn:hover:not(.filter-active) {
-  border-color: #2E86AB;
-  background: rgba(46, 134, 171, 0.05);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(46, 134, 171, 0.3);
-}
-
-.filter-btn.filter-active {
-  background: #205b68;
-  border-color: #2E86AB;
-  color: white;
-}
-
-.filter-btn.filter-active:hover {
-  background: #3a9eb4;
-}
-
-.filter-btn span {
-  position: relative;
-  z-index: 1;
-}
-
-/* ============================================
-   BOTÓN DE REFRESH
-   ============================================ */
-.btn-refresh {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.625rem 1.5rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  border-radius: 12px;
-  background: var(--gradient-ocean);
-  color: white;
-  border: none;
-  box-shadow: 0 4px 12px rgba(46, 134, 171, 0.25);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  cursor: pointer;
-}
-
-.btn-refresh:hover:not(:disabled) {
-  box-shadow: 0 6px 20px rgba(46, 134, 171, 0.35);
-  transform: translateY(-2px);
-}
-
-.btn-refresh:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
 
 /* ============================================
    TABLA MODERNA
@@ -107,6 +31,7 @@
   padding: 1rem 1.5rem;
   font-weight: 600;
   color: #2E86AB;
+  background-color: #f1f5f9;
   text-transform: uppercase;
   font-size: 0.75rem;
   letter-spacing: 0.5px;
@@ -115,7 +40,7 @@
 }
 
 .calls-table-modern tbody .call-row {
-  border-bottom: 1px solid rgba(46, 134, 171, 0.06);
+  border-bottom: 2px solid rgba(46, 134, 171, 0.06);
   transition: all 0.2s ease;
 }
 
@@ -125,8 +50,8 @@
 
 .calls-table-modern tbody .call-row:hover {
   background: var(--gradient-card-bg);
-  transform: scale(1.005);
-  box-shadow: 0 2px 8px rgba(46, 134, 171, 0.08);
+  transform: scale(1.007);
+  box-shadow: 0 2px 8px rgba(18, 49, 61, 0.244);
 }
 
 .calls-table-modern tbody td {
@@ -137,25 +62,29 @@
 }
 
 /* ============================================
-   TAGS Y BADGES
+   TAGS Y BADGES - Específicos de Calls
    ============================================ */
 .tag-queue {
   display: inline-flex;
   align-items: center;
   padding: 0.375rem 0.875rem;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+  border-radius: 15px;
+  background: #3b82f6;
   color: white;
   font-size: 0.75rem;
   font-weight: 600;
   box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25);
 }
 
+.tag-queue:hover{
+  background: #60a5fa;
+}
+
 .tag-no-queue {
   display: inline-flex;
   align-items: center;
   padding: 0.375rem 0.875rem;
-  border-radius: 10px;
+  border-radius: 15px;
   background: #f3f4f6;
   color: #6b7280;
   font-size: 0.75rem;
@@ -166,24 +95,31 @@
   display: inline-flex;
   align-items: center;
   padding: 0.375rem 0.875rem;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+  border-radius: 15px;
+  background:#10b981;
   color: white;
   font-size: 0.75rem;
   font-weight: 600;
   box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
 }
 
+.badge-answered:hover{ 
+    background: #34d399;
+}
+
 .badge-missed {
   display: inline-flex;
   align-items: center;
   padding: 0.375rem 0.875rem;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+  border-radius: 15px;
+  background: #ef4444;
   color: white;
   font-size: 0.75rem;
   font-weight: 600;
   box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
+}
+.badge-missed:hover{
+    background: #f87171;
 }
 
 /* ============================================
@@ -267,7 +203,7 @@
 }
 
 .pagination-number:hover {
-  border-color: #2E86AB;
+  border-color: #2E86AB solid 2px;
   background: rgba(46, 134, 171, 0.05);
   color: #2E86AB;
 }
@@ -278,23 +214,7 @@
   color: white;
 }
 
-/* ============================================
-   SPINNER
-   ============================================ */
-.spinner {
-  width: 48px;
-  height: 48px;
-  border: 4px solid rgba(46, 134, 171, 0.2);
-  border-top-color: #2E86AB;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
 
 /* ============================================
    RESPONSIVE
@@ -335,30 +255,7 @@
   }
 }
 
-/* ============================================
-   ANIMACIONES
-   ============================================ */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 
-.fade-in-up {
-  animation: fadeInUp 0.5s ease-out forwards;
-}
-
-/* ============================================
-   UTILIDADES
-   ============================================ */
-:host {
-  display: block;
-}
 
 /* Scroll suave para la tabla */
 .calls-table-modern {
@@ -579,4 +476,44 @@
 [data-theme="dark"] .quick-stat {
   background: rgba(46, 134, 171, 0.08);
   border-color: rgba(46, 134, 171, 0.2);
+}
+
+/* ============================================
+   DARK MODE - Calls
+   ============================================ */
+[data-theme="dark"] .calls-table-modern,
+[data-theme="dark"] .pagination-modern,
+[data-theme="dark"] .btn-detail,
+[data-theme="dark"] .pagination-btn,
+[data-theme="dark"] .pagination-number {
+  background: #1e293b;
+  border-color: #334155;
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .calls-table-modern thead th {
+  color: #56cfe1;
+}
+
+[data-theme="dark"] .calls-table-modern tbody td {
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .tag-no-queue {
+  background: #475569;
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .btn-detail:hover,
+[data-theme="dark"] .pagination-btn:hover:not(:disabled),
+[data-theme="dark"] .pagination-number:hover {
+  background: #334155;
+  border-color: #2E86AB;
+  color: #56cfe1;
+}
+
+[data-theme="dark"] .pagination-number.pagination-active {
+  background: #2E86AB;
+  border-color: #56cfe1;
+  color: white;
 }

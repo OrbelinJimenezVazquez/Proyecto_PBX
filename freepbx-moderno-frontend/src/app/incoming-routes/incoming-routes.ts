@@ -10,6 +10,7 @@ import { ExportService } from '../core/export.service';
 
 @Component({
   selector: 'app-incoming-routes',
+  standalone: true,
   templateUrl: './incoming-routes.html',
   styleUrls: ['./incoming-routes.css'],
   imports: [RouteDetailComponent]
