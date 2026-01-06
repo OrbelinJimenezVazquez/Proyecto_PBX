@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, Text, ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime, Text, ForeignKey, Float, BigInteger
 from sqlalchemy.orm import relationship
 from database import Base
 
@@ -95,3 +95,140 @@ class IncomingRoute(Base):
     delay_answer = Column(Integer)
     pricid = Column(Integer)
     rvolume = Column(String(5))
+
+# Modelo para Queue Log (asteriskcdrdb) - Estructura REAL
+class QueueLog(Base):
+    __tablename__ = "queuelog"
+    __table_args__ = {'schema': 'asteriskcdrdb'}
+    
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    time = Column(DateTime, index=True)
+    callid = Column(String(40), index=True)
+    queuename = Column(String(20), index=True)
+    serverid = Column(String(20))
+    agent = Column(String(40), index=True)
+    event = Column(String(20), index=True)
+    data1 = Column(String(40))
+    data2 = Column(String(40))
+    data3 = Column(String(40))
+    data4 = Column(String(40))
+    data5 = Column(String(40))
+
+# Modelo para Queue Stats (qstats) - Estructura REAL
+class QueueStats(Base):
+    __tablename__ = "queue_stats"
+    __table_args__ = {'schema': 'qstats'}
+    
+    queue_stats_id = Column(Integer, primary_key=True)
+    uniqued = Column(String(40))
+    datetime = Column(DateTime, index=True)
+    gname = Column(Integer)
+    qqsent = Column(Integer)
+    gevent = Column(Integer)
+    info1 = Column(String(50))
+    info2 = Column(String(50))
+    info3 = Column(String(50))
+    info4 = Column(String(50))
+    info5 = Column(String(50))
+
+# Modelo para Queue Stats MV (vista materializada - qstats) - Estructura REAL
+class QueueStatsMV(Base):
+    __tablename__ = "queue_stats_mv"
+    __table_args__ = {'schema': 'qstats'}
+    
+    id = Column(Integer, primary_key=True)
+    datetime = Column(DateTime, index=True)
+    datetimeconnect = Column(DateTime)
+    datetimeend = Column(DateTime)
+    queue = Column(String(100), index=True)
+    agent = Column(String(100))
+    event = Column(String(40), index=True)
+    uniqueid = Column(String(50))
+    real_uniqueid = Column(String(50))
+    did = Column(String(100))
+    url = Column(String(100))
+    position = Column(Integer)
+    info1 = Column(String(50))
+    info2 = Column(String(50))
+    info3 = Column(String(50))
+    info4 = Column(String(50))
+    info5 = Column(String(50))
+    overflow = Column(Integer)
+    combined_waittime = Column(Integer)
+    waittime = Column(Integer)
+    talktime = Column(Integer)
+    ringtime = Column(Integer)
+
+# Modelo para Agent Activity (qstats) - Monitor de agentes en tiempo real
+class AgentActivity(Base):
+    __tablename__ = "agent_activity"
+    __table_args__ = {'schema': 'qstats'}
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    datetime = Column(DateTime, index=True)
+    queue = Column(Text)
+    agent = Column(String(100), index=True)
+    event = Column(String(40), index=True)
+    data = Column(String(150))
+    lastedforseconds = Column(Integer)
+    uniqueid = Column(String(100), index=True)
+    computed = Column(Integer)
+    info1 = Column(String(200))
+    info2 = Column(String(200))
+
+# Modelo para Agent Activity Pause (qstats) - Pausas de agentes
+class AgentActivityPause(Base):
+    __tablename__ = "agent_activity_pause"
+    __table_args__ = {'schema': 'qstats'}
+    
+    agent = Column(String(250), primary_key=True)
+    datetime = Column(DateTime)
+    state = Column(String(15))
+    queue = Column(String(250))
+    data = Column(String(150))
+    computed = Column(Integer)
+    pauseid = Column(Integer)
+
+# Modelo para Agent Activity Session (qstats) - Sesiones login/logout
+class AgentActivitySession(Base):
+    __tablename__ = "agent_activity_session"
+    __table_args__ = {'schema': 'qstats'}
+    
+    agent = Column(String(250), primary_key=True)
+    datetime = Column(DateTime)
+    state = Column(String(15))
+    queue = Column(String(250))
+    data = Column(String(150))
+    incall = Column(Integer)
+    sessionid = Column(Integer)
+    sessioncount = Column(Integer)
+    computed = Column(Integer)
+
+# Modelo para AgentNames (qstats) - Catálogo de agentes
+class AgentName(Base):
+    __tablename__ = "agentnames"
+    __table_args__ = {'schema': 'qstats'}
+    
+    id = Column(Integer, primary_key=True)
+    qagent = Column(Integer, index=True)
+    agent = Column(String(250), index=True)
+    name = Column(String(250))
+
+# Modelo para Pauses (qstats) - Catálogo de tipos de pausa
+class Pause(Base):
+    __tablename__ = "pauses"
+    __table_args__ = {'schema': 'qstats'}
+    
+    id = Column(Integer, primary_key=True)
+    name = Column(String(250))
+    color = Column(String(15))
+
+# Modelo para QueueNames (qstats) - Nombres de colas
+class QueueName(Base):
+    __tablename__ = "queuenames"
+    __table_args__ = {'schema': 'qstats'}
+    
+    id = Column(Integer, primary_key=True)
+    qname = Column(Integer, index=True)
+    queue = Column(String(250), index=True)
+    descr = Column(String(250))

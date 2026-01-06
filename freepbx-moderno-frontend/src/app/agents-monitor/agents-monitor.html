@@ -28,8 +28,8 @@
         (click)="refresh()"
         [disabled]="loading"
         class="btn-primary">
-        <span class="material-icons-outlined text-lg" [class.rotate-animation]="loading">refresh</span>
-        {{ loading ? 'Actualizando...' : 'Actualizar ahora' }}
+        <span class="material-icons-round text-lg" [class.rotate-animation]="loading">refresh</span>
+        {{ loading ? 'Actualizando...' : 'Actualizar' }}
       </button>
     </div>
   </div>
@@ -57,7 +57,7 @@
         </div>
         <div>
           <p class="text-xs text-gray-500">Total</p>
-          <p class="text-2xl font-bold text-gray-800">{{ totalAgents }}</p>
+          <p class="text-2xl font-bold text-gray-800">{{ summary.total }}</p>
         </div>
       </div>
     </div>
@@ -70,7 +70,7 @@
         </div>
         <div>
           <p class="text-xs text-gray-500">Disponibles</p>
-          <p class="text-2xl font-bold text-green-600">{{ availableAgents }}</p>
+          <p class="text-2xl font-bold text-green-600">{{ summary.available }}</p>
         </div>
       </div>
     </div>
@@ -79,11 +79,11 @@
     <div class="stat-card fade-in-up">
       <div class="flex items-center gap-3">
         <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-red-100 to-red-200 flex items-center justify-center">
-          <span class="material-icons-outlined text-red-600 text-xl">call</span>
+          <span class="material-icons-outlined text-red-600 text-xl">phone_in_talk</span>
         </div>
         <div>
           <p class="text-xs text-gray-500">En llamada</p>
-          <p class="text-2xl font-bold text-red-600">{{ busyAgents }}</p>
+          <p class="text-2xl font-bold text-red-600">{{ summary.busy }}</p>
         </div>
       </div>
     </div>
@@ -96,7 +96,7 @@
         </div>
         <div>
           <p class="text-xs text-gray-500">En pausa</p>
-          <p class="text-2xl font-bold text-amber-600">{{ pausedAgents }}</p>
+          <p class="text-2xl font-bold text-amber-600">{{ summary.paused }}</p>
         </div>
       </div>
     </div>
@@ -108,63 +108,83 @@
           <span class="material-icons-outlined text-gray-600 text-xl">cancel</span>
         </div>
         <div>
-          <p class="text-xs text-gray-500">Offline</p>
-          <p class="text-2xl font-bold text-gray-600">{{ offlineAgents }}</p>
+          <p class="text-xs text-gray-500">Desconectado</p>
+          <p class="text-2xl font-bold text-gray-600">{{ summary.offline }}</p>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Estado de Colas -->
-  @if (queues.length > 0) {
-    <div class="bg-white rounded-2xl border border-gray-200 p-6 shadow-lg">
-      <div class="flex items-center gap-3 mb-4">
-        <span class="material-icons-outlined text-[#2E86AB] text-2xl">queue</span>
-        <h2 class="text-xl font-bold text-gray-800">Estado de Colas</h2>
+  <!-- Filtros -->
+  <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+    <div class="flex flex-wrap items-center gap-4">
+      <div class="flex items-center gap-2">
+        <span class="text-sm text-gray-600">Filtrar por estado:</span>
+        <div class="flex gap-2">
+          <button 
+            (click)="filterByStatus('all')"
+            [class.bg-blue-600]="selectedStatus === 'all'"
+            [class.text-white]="selectedStatus === 'all'"
+            [class.bg-gray-100]="selectedStatus !== 'all'"
+            [class.text-gray-600]="selectedStatus !== 'all'"
+            class="px-3 py-1 rounded-lg text-sm font-medium transition-colors">
+            Todos
+          </button>
+          <button 
+            (click)="filterByStatus('available')"
+            [class.bg-green-600]="selectedStatus === 'available'"
+            [class.text-white]="selectedStatus === 'available'"
+            [class.bg-gray-100]="selectedStatus !== 'available'"
+            [class.text-gray-600]="selectedStatus !== 'available'"
+            class="px-3 py-1 rounded-lg text-sm font-medium transition-colors">
+            Disponibles
+          </button>
+          <button 
+            (click)="filterByStatus('busy')"
+            [class.bg-red-600]="selectedStatus === 'busy'"
+            [class.text-white]="selectedStatus === 'busy'"
+            [class.bg-gray-100]="selectedStatus !== 'busy'"
+            [class.text-gray-600]="selectedStatus !== 'busy'"
+            class="px-3 py-1 rounded-lg text-sm font-medium transition-colors">
+            En llamada
+          </button>
+          <button 
+            (click)="filterByStatus('paused')"
+            [class.bg-amber-600]="selectedStatus === 'paused'"
+            [class.text-white]="selectedStatus === 'paused'"
+            [class.bg-gray-100]="selectedStatus !== 'paused'"
+            [class.text-gray-600]="selectedStatus !== 'paused'"
+            class="px-3 py-1 rounded-lg text-sm font-medium transition-colors">
+            En pausa
+          </button>
+        </div>
       </div>
-      
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        @for (queue of queues; track queue.name) {
-          <div class="border border-gray-200 rounded-xl p-4 hover:shadow-md transition-shadow">
-            <h3 class="font-semibold text-gray-800 mb-3">{{ queue.name }}</h3>
-            <div class="space-y-2 text-sm">
-              <div class="flex justify-between">
-                <span class="text-gray-600">En espera:</span>
-                <span class="font-semibold" [class.text-red-600]="queue.waiting > 5">
-                  {{ queue.waiting }}
-                </span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-gray-600">Atendidas:</span>
-                <span class="font-semibold text-green-600">{{ queue.answered }}</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-gray-600">Abandonadas:</span>
-                <span class="font-semibold text-amber-600">{{ queue.abandoned }}</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-gray-600">Agentes conectados:</span>
-                <span class="font-semibold text-blue-600">
-                  {{ queue.agentsAvailable }} / {{ queue.agentsLoggedIn }}
-                </span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-gray-600">Espera más larga:</span>
-                <span class="font-semibold">{{ formatTime(queue.longestWait) }}</span>
-              </div>
-            </div>
-          </div>
-        }
-      </div>
+
+      @if (queues.length > 0) {
+        <div class="flex items-center gap-2">
+          <span class="text-sm text-gray-600">Cola:</span>
+          <select 
+            [(ngModel)]="selectedQueue"
+            class="px-3 py-1 border border-gray-200 rounded-lg text-sm bg-white">
+            <option value="all">Todas las colas</option>
+            @for (queue of queues; track queue.id) {
+              <option [value]="queue.id">{{ queue.name }}</option>
+            }
+          </select>
+        </div>
+      }
     </div>
-  }
+  </div>
 
   <!-- Lista de Agentes -->
   <div class="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden">
     <div class="px-6 py-5 border-b border-gray-100">
-      <div class="flex items-center gap-3">
-        <span class="material-icons-outlined text-[#2E86AB]">badge</span>
-        <h2 class="text-xl font-bold text-gray-800">Agentes en Línea</h2>
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <span class="material-icons-outlined text-[#2E86AB]">badge</span>
+          <h2 class="text-xl font-bold text-gray-800">Agentes Activos</h2>
+          <span class="text-sm text-gray-500">({{ filteredAgents.length }} agentes)</span>
+        </div>
       </div>
     </div>
 
@@ -173,13 +193,13 @@
         <div class="spinner mx-auto mb-4"></div>
         <p class="text-gray-500">Cargando agentes...</p>
       </div>
-    } @else if (agents.length === 0) {
+    } @else if (filteredAgents.length === 0) {
       <div class="p-12 text-center">
         <div class="w-20 h-20 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center mx-auto mb-4">
           <span class="material-icons-outlined text-gray-400 text-4xl">person_off</span>
         </div>
-        <h3 class="text-xl font-semibold text-gray-800 mb-2">No hay agentes conectados</h3>
-        <p class="text-gray-500">Los agentes aparecerán aquí cuando se conecten</p>
+        <h3 class="text-xl font-semibold text-gray-800 mb-2">No hay agentes</h3>
+        <p class="text-gray-500">No se encontraron agentes con los filtros seleccionados</p>
       </div>
     } @else {
       <div class="overflow-x-auto">
@@ -189,23 +209,22 @@
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Agente</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cola</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duración</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Llamadas</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tiempo prom.</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tiempo en estado</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Última actividad</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-100">
-            @for (agent of agents; track agent.extension) {
+            @for (agent of filteredAgents; track agent.extension) {
               <tr class="hover:bg-gray-50 transition-colors">
                 <!-- Agente -->
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm"
-                         [style.background]="'linear-gradient(135deg, ' + getStatusColor(agent.status) + ' 0%, ' + getStatusColor(agent.status) + '99 100%)'">
-                      {{ agent.name.charAt(0).toUpperCase() }}
+                    <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm {{ getStatusClass(agent.status) }}">
+                      {{ (agent.name || 'A').charAt(0).toUpperCase() }}
                     </div>
                     <div>
-                      <p class="font-medium text-gray-800">{{ agent.name }}</p>
+                      <p class="font-medium text-gray-800">{{ agent.name || 'Sin nombre' }}</p>
                       <p class="text-xs text-gray-500">Ext. {{ agent.extension }}</p>
                     </div>
                   </div>
@@ -213,47 +232,53 @@
 
                 <!-- Cola -->
                 <td class="px-6 py-4 whitespace-nowrap">
-                  <span class="text-sm text-gray-600">{{ agent.queue }}</span>
+                  <span class="text-sm text-gray-600">{{ agent.queueName || agent.queue || 'N/A' }}</span>
                 </td>
 
                 <!-- Estado -->
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="flex items-center gap-2">
-                    <span class="material-icons-outlined text-lg" 
-                          [style.color]="getStatusColor(agent.status)">
-                      {{ getStatusIcon(agent.status) }}
-                    </span>
-                    <span class="text-sm font-medium" 
-                          [style.color]="getStatusColor(agent.status)">
-                      {{ agent.statusText }}
-                    </span>
+                    <div class="flex items-center gap-2 px-3 py-1 rounded-full {{ getStatusClass(agent.status) }}">
+                      <span class="material-icons-outlined text-sm">
+                        {{ getStatusIcon(agent.status) }}
+                      </span>
+                      <span class="text-sm font-medium capitalize">
+                        {{ agent.status }}
+                      </span>
+                    </div>
                   </div>
                   @if (agent.pauseReason) {
-                    <p class="text-xs text-gray-500 mt-1">{{ agent.pauseReason }}</p>
+                    <p class="text-xs text-gray-500 mt-1 italic">{{ agent.pauseReason }}</p>
+                  }
+                  @if (isLongPause(agent)) {
+                    <div class="mt-1 flex items-center gap-1">
+                      <span class="material-icons-outlined text-red-500 text-sm animate-pulse">warning</span>
+                      <span class="text-xs text-red-600 font-semibold">Pausa prolongada</span>
+                    </div>
                   }
                 </td>
 
-                <!-- Duración estado actual -->
+                <!-- Tiempo en estado actual -->
                 <td class="px-6 py-4 whitespace-nowrap">
-                  <span class="text-sm text-gray-600">
-                    {{ formatDuration(agent.loginTime) }}
-                  </span>
-                </td>
-
-                <!-- Llamadas -->
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="text-sm">
-                    <span class="text-green-600 font-semibold">{{ agent.callsAnswered }}</span>
-                    <span class="text-gray-400 mx-1">/</span>
-                    <span class="text-red-600">{{ agent.callsMissed }}</span>
+                  <div class="text-sm text-gray-600 font-mono">
+                    {{ formatTime(agent.timeInState || 0) }}
                   </div>
                 </td>
 
-                <!-- Tiempo promedio -->
+                <!-- Última actividad -->
                 <td class="px-6 py-4 whitespace-nowrap">
-                  <span class="text-sm text-gray-600">
-                    {{ formatTime(agent.avgTalkTime) }}
-                  </span>
+                  <div class="text-xs text-gray-500">
+                    {{ agent.lastActivity || 'N/A' }}
+                  </div>
+                </td>
+
+                <!-- Acciones -->
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <button 
+                    (click)="getAgentDetails(agent.extension?.toString() || agent.extension)"
+                    class="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors">
+                    Ver detalles
+                  </button>
                 </td>
               </tr>
             }
@@ -262,31 +287,169 @@
       </div>
     }
   </div>
+</div>
 
-  <!-- Top Performers -->
-  @if (getTopPerformers().length > 0) {
-    <div class="bg-white rounded-2xl border border-gray-200 p-6 shadow-lg">
-      <div class="flex items-center gap-3 mb-4">
-        <span class="material-icons-outlined text-[#FFC107] text-2xl">emoji_events</span>
-        <h2 class="text-xl font-bold text-gray-800">Top 5 del Día</h2>
-      </div>
-      
-      <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-        @for (agent of getTopPerformers(); track agent.extension; let i = $index) {
-          <div class="border border-gray-200 rounded-xl p-4 text-center hover:shadow-md transition-shadow">
-            <div class="w-16 h-16 rounded-full mx-auto mb-3 flex items-center justify-center text-white font-bold text-xl"
-                 [style.background]="'linear-gradient(135deg, ' + getStatusColor(agent.status) + ' 0%, ' + getStatusColor(agent.status) + '99 100%)'">
-              {{ agent.name.charAt(0).toUpperCase() }}
-            </div>
-            <h3 class="font-semibold text-gray-800 mb-1">{{ agent.name }}</h3>
-            <p class="text-xs text-gray-500 mb-2">Ext. {{ agent.extension }}</p>
-            <div class="flex items-center justify-center gap-1">
-              <span class="material-icons-outlined text-green-600 text-sm">call</span>
-              <span class="text-lg font-bold text-green-600">{{ agent.callsAnswered }}</span>
+<!-- Modal de Detalles del Agente -->
+@if (showModal && selectedAgent) {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <!-- Header del Modal -->
+      <div class="modal-header">
+        <div class="flex items-center gap-4">
+          <div class="w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-2xl {{ getStatusClass(selectedAgent.status) }}">
+            {{ (selectedAgent.name || 'A').charAt(0).toUpperCase() }}
+          </div>
+          <div>
+            <h2 class="text-2xl font-bold text-gray-800">{{ selectedAgent.name || 'Sin nombre' }}</h2>
+            <p class="text-sm text-gray-500">Extensión {{ selectedAgent.extension }}</p>
+            <div class="flex items-center gap-2 mt-1">
+              <div class="flex items-center gap-1 px-2 py-1 rounded-full text-xs {{ getStatusClass(selectedAgent.status) }}">
+                <span class="material-icons-outlined text-xs">{{ getStatusIcon(selectedAgent.status) }}</span>
+                <span class="capitalize">{{ selectedAgent.status }}</span>
+              </div>
+              @if (selectedAgent.queue) {
+                <span class="text-xs text-gray-600">Cola: {{ selectedAgent.queueName || selectedAgent.queue }}</span>
+              }
             </div>
           </div>
+        </div>
+        <button (click)="closeModal()" class="close-button">
+          <span class="material-icons-outlined">close</span>
+        </button>
+      </div>
+
+      <!-- Contenido del Modal -->
+      <div class="modal-body">
+        @if (loadingDetails) {
+          <div class="flex items-center justify-center py-12">
+            <div class="spinner"></div>
+            <p class="ml-4 text-gray-600">Cargando detalles...</p>
+          </div>
+        } @else if (agentDetails) {
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Estadísticas del Día -->
+            <div class="detail-card">
+              <h3 class="detail-card-title">
+                <span class="material-icons-outlined text-blue-600">calendar_today</span>
+                Estadísticas del Día
+              </h3>
+              <div class="stats-grid">
+                <div class="stat-item">
+                  <span class="stat-label">Llamadas Atendidas</span>
+                  <span class="stat-value text-green-600">{{ agentDetails.dailyStats?.callsAnswered || 0 }}</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">Pausas del Día</span>
+                  <span class="stat-value text-amber-600">{{ agentDetails.dailyStats?.pauseCount || 0 }}</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">Tiempo Total en Llamada</span>
+                  <span class="stat-value text-blue-600">{{ formatTime(agentDetails.dailyStats?.totalTalkTime || 0) }}</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">Tiempo Promedio</span>
+                  <span class="stat-value text-purple-600">{{ formatTime(agentDetails.dailyStats?.avgTalkTime || 0) }}</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">Tiempo en Pausa</span>
+                  <span class="stat-value text-amber-600">{{ formatTime(agentDetails.dailyStats?.totalPauseTime || 0) }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Estado Actual -->
+            <div class="detail-card">
+              <h3 class="detail-card-title">
+                <span class="material-icons-outlined text-green-600">schedule</span>
+                Estado Actual
+              </h3>
+              <div class="stats-grid">
+                <div class="stat-item">
+                  <span class="stat-label">Estado</span>
+                  <span class="stat-value capitalize">{{ selectedAgent.status }}</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">Tiempo en Estado</span>
+                  <span class="stat-value">{{ formatTime(selectedAgent.timeInState || 0) }}</span>
+                </div>
+                @if (selectedAgent.pauseReason) {
+                  <div class="stat-item col-span-2">
+                    <span class="stat-label">Razón de Pausa</span>
+                    <span class="stat-value text-amber-600">{{ selectedAgent.pauseReason }}</span>
+                  </div>
+                }
+                <div class="stat-item">
+                  <span class="stat-label">Última Actividad</span>
+                  <span class="stat-value text-sm">{{ selectedAgent.lastActivity || 'N/A' }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Gráfica de Llamadas -->
+            <div class="detail-card">
+              <h3 class="detail-card-title">
+                <span class="material-icons-outlined text-purple-600">pie_chart</span>
+                Distribución de Llamadas
+              </h3>
+              <div class="chart-container">
+                <canvas id="callsChart"></canvas>
+              </div>
+            </div>
+
+            <!-- Gráfica de Tiempos -->
+            <div class="detail-card">
+              <h3 class="detail-card-title">
+                <span class="material-icons-outlined text-indigo-600">bar_chart</span>
+                Distribución de Tiempo
+              </h3>
+              <div class="chart-container">
+                <canvas id="performanceChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Información Adicional -->
+          @if (agentDetails.session) {
+            <div class="detail-card mt-6">
+              <h3 class="detail-card-title">
+                <span class="material-icons-outlined text-blue-600">info</span>
+                Información de Sesión
+              </h3>
+              <div class="stats-grid">
+                <div class="stat-item">
+                  <span class="stat-label">Estado de Sesión</span>
+                  <span class="stat-value text-sm">
+                    {{ agentDetails.session.isLoggedIn ? '🟢 Conectado' : '⚪ Desconectado' }}
+                  </span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">En Llamada</span>
+                  <span class="stat-value text-sm">
+                    {{ agentDetails.session.inCall ? '📞 Sí' : '❌ No' }}
+                  </span>
+                </div>
+                @if (agentDetails.session.queue) {
+                  <div class="stat-item">
+                    <span class="stat-label">Cola Actual</span>
+                    <span class="stat-value text-sm">{{ agentDetails.session.queue }}</span>
+                  </div>
+                }
+                <div class="stat-item">
+                  <span class="stat-label">Sesiones Hoy</span>
+                  <span class="stat-value">{{ agentDetails.session.sessionCount || 0 }}</span>
+                </div>
+              </div>
+            </div>
+          }
         }
       </div>
+
+      <!-- Footer del Modal -->
+      <div class="modal-footer">
+        <button (click)="closeModal()" class="btn-secondary">
+          Cerrar
+        </button>
+      </div>
     </div>
-  }
-</div>
+  </div>
+}

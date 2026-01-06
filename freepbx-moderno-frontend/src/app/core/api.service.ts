@@ -92,4 +92,59 @@ export class ApiService {
   generateDashboardPdf(): Observable<Blob> {
     return this.http.get(`${this.baseUrl}/dashboard/report/pdf`, { responseType: 'blob' });
   }
+
+  // NUEVOS ENDPOINTS PARA MÉTRICAS DE COLAS
+  getQueueMetrics(period: 'today' | 'week' | 'month' | 'year' = 'today'): Observable<any> {
+    // Si es 'year', usamos 'month' en el backend (30 días es suficiente)
+    const backendPeriod = period === 'year' ? 'month' : period;
+    return this.http.get<any>(`${this.baseUrl}/dashboard/queue-metrics?period=${backendPeriod}`);
+  }
+
+  getQueueSLA(period: 'today' | 'week' | 'month' | 'year' = 'today', slaThreshold: number = 30): Observable<any> {
+    // Si es 'year', usamos 'month' en el backend (30 días es suficiente)
+    const backendPeriod = period === 'year' ? 'month' : period;
+    return this.http.get<any>(`${this.baseUrl}/dashboard/queue-sla?period=${backendPeriod}&sla_threshold=${slaThreshold}`);
+  }
+
+  getActiveCalls(): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/dashboard/active-calls`);
+  }
+
+  getQueueSummary(): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/dashboard/queue-summary`);
+  }
+
+  // ENDPOINTS PARA MONITOR DE AGENTES
+  getAgentsRealtimeStatus(): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/asternic/agents/realtime-status`);
+  }
+
+  getAgentDetails(extension: string): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/asternic/agents/${extension}/details`);
+  }
+
+  getAgentsSessions(): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/asternic/agents/sessions`);
+  }
+
+  getAgentsPauses(): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/asternic/agents/pauses`);
+  }
+
+  // ENDPOINTS PARA GESTIÓN DE COLAS
+  getQueues(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/queues`);
+  }
+
+  createQueue(queue: any): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/queues`, queue);
+  }
+
+  updateQueue(id: number, queue: any): Observable<any> {
+    return this.http.put<any>(`${this.baseUrl}/queues/${id}`, queue);
+  }
+
+  deleteQueue(id: number): Observable<any> {
+    return this.http.delete<any>(`${this.baseUrl}/queues/${id}`);
+  }
 }

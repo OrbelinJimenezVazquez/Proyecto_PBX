@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import telephony, asternic  
+from routers import telephony, asternic, dashboard, queues
 import os
 from dotenv import load_dotenv
 
@@ -21,6 +21,9 @@ app.add_middleware(
 
 app.include_router(telephony.router)
 app.include_router(asternic.router)
+app.include_router(dashboard.router)
+app.include_router(queues.router)
+
 @app.get("/")
 def read_root():
     return {"message": "BeyondPBX API - Running"}

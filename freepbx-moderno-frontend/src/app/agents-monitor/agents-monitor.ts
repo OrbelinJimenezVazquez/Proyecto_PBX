@@ -1,88 +1,222 @@
 // src/app/agents-monitor/agents-monitor.ts
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AsternicService, AgentStatus, QueueStatus } from '../core/asternic.service';
-import { Subscription, interval } from 'rxjs';
+import { FormsModule } from '@angular/forms';
+import { ApiService } from '../core/api.service';
+import { ToastService } from '../core/toast.service';
+import { ChartService } from '../core/chart.service';
+import { Chart } from 'chart.js';
+import { catchError } from 'rxjs/operators';
+import { of, Subscription, interval } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-agents-monitor',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './agents-monitor.html',
   styleUrls: ['./agents-monitor.css']
 })
-export class AgentsMonitorComponent implements OnInit, OnDestroy {
-  agents: AgentStatus[] = [];
-  queues: QueueStatus[] = [];
+export class AgentsMonitorComponent implements OnInit, OnDestroy, AfterViewInit {
+  agents: any[] = [];
+  sessions: any[] = [];
+  pauses: any[] = [];
+  summary: any = {
+    total: 0,
+    available: 0,
+    busy: 0,
+    paused: 0,
+    offline: 0,
+    ringing: 0
+  };
+  
   loading = false;
   lastUpdate?: Date;
   
-  // Contadores rápidos
-  totalAgents = 0;
-  availableAgents = 0;
-  busyAgents = 0;
-  pausedAgents = 0;
-  offlineAgents = 0;
-
+  // Filtros
+  selectedStatus: string = 'all';
+  selectedQueue: string = 'all';
+  queues: Array<{id: string, name: string}> = [];
+  
+  // Modal de detalles
+  showModal = false;
+  selectedAgent: any = null;
+  agentDetails: any = null;
+  loadingDetails = false;
+  
+  // Gráficas
+  private callsChart: Chart | null = null;
+  private performanceChart: Chart | null = null;
+  
+  // Alertas
+  private readonly PAUSE_ALERT_THRESHOLD = 900; // 15 minutos en segundos
+  private alertedAgents = new Set<string>();
+  
   private updateSubscription?: Subscription;
-  private refreshInterval = 5; // segundos
+  refreshInterval = 10; // segundos - ahora público para el template
 
-  constructor(private asternicService: AsternicService) {}
+  constructor(
+    private api: ApiService,
+    private toast: ToastService,
+    private chartService: ChartService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
-    this.loadData();
+    this.loadAgents();
     this.startAutoRefresh();
+  }
+
+  ngAfterViewInit(): void {
+    // Las gráficas se crean cuando se abre el modal
   }
 
   ngOnDestroy(): void {
     this.stopAutoRefresh();
+    this.destroyCharts();
   }
 
   /**
-   * Carga datos iniciales
+   * Carga estado de agentes en tiempo real
    */
-  loadData(): void {
+  loadAgents(): void {
     this.loading = true;
     
-    // Cargar agentes
-    this.asternicService.getAgentsStatus().subscribe({
-      next: (agents) => {
-        this.agents = agents;
-        this.updateCounters();
-        this.lastUpdate = new Date();
-        this.loading = false;
-      },
-      error: (err) => {
+    this.api.getAgentsRealtimeStatus().pipe(
+      catchError((err) => {
         console.error('Error cargando agentes:', err);
+        this.toast.error('Error al cargar estado de agentes');
+        return of(null);
+      })
+    ).subscribe({
+      next: (data: any) => {
+        if (data) {
+          this.agents = data.agents || [];
+          this.summary = data.summary || this.summary;
+          this.lastUpdate = new Date();
+          
+          console.log('Loaded agents:', this.agents);
+          console.log('First agent structure:', this.agents[0]);
+          
+          // Extraer colas únicas con nombres legibles
+          const uniqueQueues = new Map();
+          this.agents.forEach(a => {
+            if (a.queue) {
+              uniqueQueues.set(a.queue, a.queueName || a.queue);
+            }
+          });
+          this.queues = Array.from(uniqueQueues.entries()).map(([id, name]) => ({ id, name }));
+          
+          // Verificar alertas de pausa prolongada
+          this.checkPauseAlerts();
+        }
         this.loading = false;
-      }
-    });
-
-    // Cargar colas
-    this.asternicService.getQueuesStatus().subscribe({
-      next: (queues) => {
-        this.queues = queues;
-      },
-      error: (err) => {
-        console.error('Error cargando colas:', err);
+        this.cdr.detectChanges();
       }
     });
   }
 
   /**
-   * Inicia actualización automática
+   * Carga sesiones activas
+   */
+  loadSessions(): void {
+    this.api.getAgentsSessions().pipe(
+      catchError((err) => {
+        console.error('Error cargando sesiones:', err);
+        return of(null);
+      })
+    ).subscribe({
+      next: (data: any) => {
+        if (data) {
+          this.sessions = data.sessions || [];
+        }
+      }
+    });
+  }
+
+  /**
+   * Carga agentes en pausa
+   */
+  loadPauses(): void {
+    this.api.getAgentsPauses().pipe(
+      catchError((err) => {
+        console.error('Error cargando pausas:', err);
+        return of(null);
+      })
+    ).subscribe({
+      next: (data: any) => {
+        if (data) {
+          this.pauses = data.pauses || [];
+        }
+      }
+    });
+  }
+
+  /**
+   * Obtiene detalles de un agente y abre el modal
+   */
+  getAgentDetails(extension: string): void {
+    console.log('getAgentDetails called with extension:', extension);
+    console.log('Available agents:', this.agents);
+    console.log('Agent extensions:', this.agents.map(a => a.extension));
+    
+    if (!extension) {
+      console.error('Extension is undefined or null');
+      this.toast.error('No se pudo identificar el agente');
+      return;
+    }
+    
+    this.loadingDetails = true;
+    this.selectedAgent = this.agents.find(a => String(a.extension) === String(extension));
+    console.log('Selected agent:', this.selectedAgent);
+    
+    if (!this.selectedAgent) {
+      console.error('Agent not found with extension:', extension);
+      this.toast.error('Agente no encontrado');
+      this.loadingDetails = false;
+      return;
+    }
+    
+    this.showModal = true;
+    
+    this.api.getAgentDetails(extension).pipe(
+      catchError((err) => {
+        console.error('Error cargando detalles:', err);
+        this.toast.error('Error al cargar detalles del agente');
+        this.loadingDetails = false;
+        return of(null);
+      })
+    ).subscribe({
+      next: (data: any) => {
+        if (data) {
+          this.agentDetails = data;
+          this.loadingDetails = false;
+          
+          // Crear gráficas después de que se rendericen los canvas
+          setTimeout(() => {
+            this.createAgentCharts();
+          }, 100);
+        }
+      }
+    });
+  }
+
+  /**
+   * Auto-refresh cada 10 segundos
    */
   startAutoRefresh(): void {
     this.updateSubscription = interval(this.refreshInterval * 1000)
       .pipe(
-        switchMap(() => this.asternicService.getAgentsStatus())
+        switchMap(() => this.api.getAgentsRealtimeStatus())
       )
       .subscribe({
-        next: (agents) => {
-          this.agents = agents;
-          this.updateCounters();
-          this.lastUpdate = new Date();
+        next: (data: any) => {
+          if (data) {
+            this.agents = data.agents || [];
+            this.summary = data.summary || this.summary;
+            this.lastUpdate = new Date();
+            this.cdr.detectChanges();
+          }
         },
         error: (err) => {
           console.error('Error en auto-refresh:', err);
@@ -90,9 +224,6 @@ export class AgentsMonitorComponent implements OnInit, OnDestroy {
       });
   }
 
-  /**
-   * Detiene actualización automática
-   */
   stopAutoRefresh(): void {
     if (this.updateSubscription) {
       this.updateSubscription.unsubscribe();
@@ -100,79 +231,85 @@ export class AgentsMonitorComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Actualiza contadores de estado
+   * Refresh manual
    */
-  private updateCounters(): void {
-    this.totalAgents = this.agents.length;
-    this.availableAgents = this.agents.filter(a => a.status === 'available').length;
-    this.busyAgents = this.agents.filter(a => a.status === 'busy').length;
-    this.pausedAgents = this.agents.filter(a => a.status === 'paused').length;
-    this.offlineAgents = this.agents.filter(a => a.status === 'offline').length;
+  refresh(): void {
+    this.loadAgents();
+    this.loadSessions();
+    this.loadPauses();
+    this.toast.success('Datos actualizados');
   }
 
   /**
-   * Obtiene color según estado
+   * Filtrar agentes
    */
-  getStatusColor(status: string): string {
-    switch (status) {
-      case 'available': return '#10b981';
-      case 'busy': return '#ef4444';
-      case 'paused': return '#f59e0b';
-      case 'ringing': return '#3b82f6';
-      case 'offline': return '#6b7280';
-      default: return '#9ca3af';
-    }
+  get filteredAgents(): any[] {
+    return this.agents.filter(agent => {
+      const statusMatch = this.selectedStatus === 'all' || agent.status === this.selectedStatus;
+      const queueMatch = this.selectedQueue === 'all' || agent.queue === this.selectedQueue;
+      return statusMatch && queueMatch;
+    });
   }
 
   /**
-   * Obtiene icono según estado
+   * Cambiar filtro de estado
    */
-  getStatusIcon(status: string): string {
-    switch (status) {
-      case 'available': return 'check_circle';
-      case 'busy': return 'call';
-      case 'paused': return 'pause_circle';
-      case 'ringing': return 'phone_in_talk';
-      case 'offline': return 'cancel';
-      default: return 'help';
-    }
+  filterByStatus(status: string): void {
+    this.selectedStatus = status;
   }
 
   /**
-   * Formatea tiempo en segundos a minutos
+   * Cambiar filtro de cola
+   */
+  filterByQueue(queue: string): void {
+    this.selectedQueue = queue;
+  }
+
+  /**
+   * Formatear tiempo en formato legible
    */
   formatTime(seconds: number): string {
-    if (!seconds) return '0m';
-    const minutes = Math.floor(seconds / 60);
+    if (!seconds || seconds < 0) return '0s';
+    
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-    return minutes > 0 ? `${minutes}m ${secs}s` : `${secs}s`;
+    
+    if (hours > 0) {
+      return `${hours}h ${minutes}m ${secs}s`;
+    } else if (minutes > 0) {
+      return `${minutes}m ${secs}s`;
+    } else {
+      return `${secs}s`;
+    }
   }
 
   /**
-   * Formatea duración desde una fecha
+   * Obtener clase CSS según estado
    */
-  formatDuration(date?: Date): string {
-    if (!date) return '-';
-    const now = new Date();
-    const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
-    return this.formatTime(diff);
+  getStatusClass(status: string): string {
+    const classes: any = {
+      'available': 'bg-green-100 text-green-800 border-green-200',
+      'busy': 'bg-red-100 text-red-800 border-red-200',
+      'paused': 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      'ringing': 'bg-blue-100 text-blue-800 border-blue-200',
+      'offline': 'bg-gray-100 text-gray-800 border-gray-200'
+    };
+    return classes[status] || classes['offline'];
   }
 
   /**
-   * Filtra agentes por estado
+   * Obtener icono según estado
    */
-  filterByStatus(status: string): AgentStatus[] {
-    return this.agents.filter(a => a.status === status);
-  }
-
-  /**
-   * Obtiene agentes ordenados por rendimiento
-   */
-  getTopPerformers(): AgentStatus[] {
-    return [...this.agents]
-      .filter(a => a.callsAnswered > 0)
-      .sort((a, b) => b.callsAnswered - a.callsAnswered)
-      .slice(0, 5);
+  getStatusIcon(status: string): string {
+    const icons: any = {
+      'available': 'check_circle',
+      'busy': 'phone_in_talk',
+      'paused': 'pause_circle',
+      'ringing': 'ring_volume',
+      'offline': 'cancel'
+    };
+    return icons[status] || 'help';
   }
 
   /**
@@ -182,5 +319,185 @@ export class AgentsMonitorComponent implements OnInit, OnDestroy {
     this.refreshInterval = seconds;
     this.stopAutoRefresh();
     this.startAutoRefresh();
+  }
+
+  /**
+   * Cierra el modal de detalles
+   */
+  closeModal(): void {
+    this.showModal = false;
+    this.selectedAgent = null;
+    this.agentDetails = null;
+    this.destroyCharts();
+  }
+
+  /**
+   * Crea gráficas de rendimiento del agente
+   */
+  private createAgentCharts(): void {
+    this.destroyCharts();
+
+    if (!this.agentDetails) return;
+
+    // Gráfica de llamadas (atendidas vs pausas)
+    const callsCanvas = document.getElementById('callsChart') as HTMLCanvasElement;
+    if (callsCanvas) {
+      const dailyStats = this.agentDetails.dailyStats || {};
+      const answered = dailyStats.callsAnswered || 0;
+      const pauseCount = dailyStats.pauseCount || 0;
+      
+      const ctx = callsCanvas.getContext('2d');
+      if (ctx) {
+        this.callsChart = new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: ['Llamadas Atendidas', 'Pausas'],
+            datasets: [{
+              data: [answered, pauseCount],
+              backgroundColor: ['#10b981', '#f59e0b'],
+              borderWidth: 3,
+              borderColor: '#ffffff',
+              hoverOffset: 10
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '65%',
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: {
+                  padding: 15,
+                  font: { size: 12 },
+                  usePointStyle: true
+                }
+              },
+              tooltip: {
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                padding: 12
+              }
+            }
+          }
+        });
+      }
+    }
+
+    // Gráfica de tiempos
+    const performanceCanvas = document.getElementById('performanceChart') as HTMLCanvasElement;
+    if (performanceCanvas) {
+      const stats = this.agentDetails.dailyStats || {};
+      const ctx = performanceCanvas.getContext('2d');
+      if (ctx) {
+        this.performanceChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: ['Tiempo en llamada', 'Tiempo en pausa'],
+            datasets: [{
+              label: 'Minutos',
+              data: [
+                Math.floor((stats.totalTalkTime || 0) / 60),
+                Math.floor((stats.totalPauseTime || 0) / 60)
+              ],
+              backgroundColor: ['#2E86AB', '#f59e0b'],
+              borderWidth: 0,
+              borderRadius: 8
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: {
+                beginAtZero: true,
+                grid: {
+                  color: 'rgba(0, 0, 0, 0.05)'
+                },
+                ticks: {
+                  font: { size: 11 }
+                }
+              },
+              x: {
+                grid: {
+                  display: false
+                },
+                ticks: {
+                  font: { size: 11 }
+                }
+              }
+            },
+            plugins: {
+              legend: {
+                display: false
+              },
+              tooltip: {
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                padding: 12,
+                callbacks: {
+                  label: (context) => `${context.parsed.y} minutos`
+                }
+              }
+            }
+          }
+        });
+      }
+    }
+  }
+
+  /**
+   * Destruye las gráficas
+   */
+  private destroyCharts(): void {
+    if (this.callsChart) {
+      this.chartService.destroyChart(this.callsChart);
+      this.callsChart = null;
+    }
+    if (this.performanceChart) {
+      this.chartService.destroyChart(this.performanceChart);
+      this.performanceChart = null;
+    }
+  }
+
+  /**
+   * Verifica alertas de agentes en pausa prolongada
+   */
+  private checkPauseAlerts(): void {
+    this.agents.forEach(agent => {
+      if (agent.status === 'paused' && agent.timeInState > this.PAUSE_ALERT_THRESHOLD) {
+        const agentId = agent.extension;
+        
+        // Solo alertar una vez por agente
+        if (!this.alertedAgents.has(agentId)) {
+          this.toast.warning(
+            `⚠️ Agente ${agent.name} (Ext. ${agent.extension}) lleva más de 15 minutos en pausa`,
+            5000
+          );
+          this.alertedAgents.add(agentId);
+        }
+      } else {
+        // Si el agente ya no está en pausa prolongada, remover de alertados
+        const agentId = agent.extension;
+        if (this.alertedAgents.has(agentId) && agent.status !== 'paused') {
+          this.alertedAgents.delete(agentId);
+        }
+      }
+    });
+  }
+
+  /**
+   * Verifica si un agente está en pausa prolongada
+   */
+  isLongPause(agent: any): boolean {
+    return agent.status === 'paused' && agent.timeInState > this.PAUSE_ALERT_THRESHOLD;
+  }
+
+  /**
+   * Obtiene el badge de alerta para un agente
+   */
+  getAlertBadge(agent: any): string {
+    if (this.isLongPause(agent)) {
+      return '⚠️ Pausa prolongada';
+    }
+    return '';
   }
 }

@@ -8,6 +8,7 @@ import { TrunksComponent } from './trunks/trunks';
 import { IvrComponent } from './ivr/ivr';
 import { IncomingRoutesComponent } from './incoming-routes/incoming-routes';
 import { AgentsMonitorComponent } from './agents-monitor/agents-monitor';
+import { QueuesComponent } from './queues/queues';
 
 export const routes: Routes = [
   { path: '', component: DashboardComponent },
@@ -16,7 +17,8 @@ export const routes: Routes = [
   { path: 'calls', component: CallsComponent },
   { path: 'trunks', component: TrunksComponent },
   { path: 'ivr', component: IvrComponent },
-  { path: 'monitoring', component: AgentsMonitorComponent }, 
+  { path: 'monitoring', component: AgentsMonitorComponent },
+  { path: 'queues', component: QueuesComponent },
 ];
   
 @NgModule({
