@@ -15,7 +15,7 @@ class CDR(Base):
     duration = Column(Integer)
     billsec = Column(Integer)
     disposition = Column(String(45), index=True)
-    uniqueid = Column(String(150))
+    uniqueid = Column(String(150)) 
     recordingfile = Column(String(255))
     did = Column(String(50))
 
@@ -183,12 +183,27 @@ class AgentActivityPause(Base):
     __table_args__ = {'schema': 'qstats'}
     
     agent = Column(String(250), primary_key=True)
-    datetime = Column(DateTime)
+    datetime = Column(TIMESTAMP, nullable=False)
     state = Column(String(15))
     queue = Column(String(250))
     data = Column(String(150))
     computed = Column(Integer)
     pauseid = Column(Integer)
+    
+    def __repr__(self):
+        return f"<AgentActivityPause(agent={self.agent}, state={self.state})>"
+
+# Modelo para Agent Activity Defer Pause (qstats) - Pausas diferidas
+class AgentActivityDeferPause(Base):
+    __tablename__ = "agent_activity_deferpause"
+    __table_args__ = {'schema': 'qstats'}
+    
+    agent = Column(String(250), primary_key=True)
+    reason = Column(String(250))
+    datetime = Column(TIMESTAMP, nullable=False)
+    
+    def __repr__(self):
+        return f"<AgentActivityDeferPause(agent={self.agent}, reason={self.reason})>"
 
 # Modelo para Agent Activity Session (qstats) - Sesiones login/logout
 class AgentActivitySession(Base):
@@ -196,7 +211,7 @@ class AgentActivitySession(Base):
     __table_args__ = {'schema': 'qstats'}
     
     agent = Column(String(250), primary_key=True)
-    datetime = Column(DateTime)
+    datetime = Column(TIMESTAMP, nullable=False)
     state = Column(String(15))
     queue = Column(String(250))
     data = Column(String(150))
@@ -204,6 +219,9 @@ class AgentActivitySession(Base):
     sessionid = Column(Integer)
     sessioncount = Column(Integer)
     computed = Column(Integer)
+    
+    def __repr__(self):
+        return f"<AgentActivitySession(agent={self.agent}, state={self.state})>"
 
 # Modelo para AgentNames (qstats) - Catálogo de agentes
 class AgentName(Base):
@@ -218,9 +236,11 @@ class Pause(Base):
     __tablename__ = "pauses"
     __table_args__ = {'schema': 'qstats'}
     
-    id = Column(Integer, primary_key=True)
-    name = Column(String(250))
-    color = Column(String(15))
+    pause_id = Column(String(50), primary_key=True)
+    pause_name = Column(String(100), nullable=False)
+    
+    def __repr__(self):
+        return f"<Pause(pause_id={self.pause_id}, pause_name={self.pause_name})>"
 
 # Modelo para QueueNames (qstats) - Nombres de colas
 class QueueName(Base):
@@ -243,6 +263,29 @@ class QEvent(Base):
     
     def __repr__(self):
         return f"<QEvent(event_id={self.event_id}, event={self.event})>"
+
+# Modelo para QAgent (qstats) - Catálogo de agentes con ID numérico
+class QAgent(Base):
+    __tablename__ = "qagent"
+    __table_args__ = {'schema': 'qstats'}
+    
+    agent_id = Column(Integer, primary_key=True, autoincrement=True)
+    agent = Column(String(100))
+    disabled = Column(Integer, default=0)
+    
+    def __repr__(self):
+        return f"<QAgent(agent_id={self.agent_id}, agent={self.agent})>"
+
+# Modelo para QName (qstats) - Catálogo de colas con ID numérico
+class QName(Base):
+    __tablename__ = "qname"
+    __table_args__ = {'schema': 'qstats'}
+    
+    queue_id = Column(Integer, primary_key=True, autoincrement=True)
+    queue = Column(String(40), nullable=False)
+    
+    def __repr__(self):
+        return f"<QName(queue_id={self.queue_id}, queue={self.queue})>"
 
 # Modelo para SQLRealtime (qstats) - Configuración realtime
 class SQLRealtime(Base):

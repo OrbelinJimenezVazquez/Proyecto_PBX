@@ -57,6 +57,7 @@ export class AgentsMonitorComponent implements OnInit, OnDestroy, AfterViewInit 
   private alertedAgents = new Set<string>();
   
   private updateSubscription?: Subscription;
+  private counterSubscription?: Subscription;
   refreshInterval = 10; // segundos - ahora público para el template
 
   constructor(
@@ -70,14 +71,54 @@ export class AgentsMonitorComponent implements OnInit, OnDestroy, AfterViewInit 
   ngOnInit(): void {
     this.loadData();
     this.startAutoRefresh();
+    this.startCounterUpdate();
   }
 
   ngAfterViewInit(): void {
     // Las gráficas se crean cuando se abre el modal
   }
 
+  /**
+   * Inicia actualización de contadores cada segundo
+   */
+  startCounterUpdate(): void {
+    this.counterSubscription = interval(1000).subscribe(() => {
+      this.updateCounters();
+    });
+  }
+
+  /**
+   * Detiene actualización de contadores
+   */
+  stopCounterUpdate(): void {
+    if (this.counterSubscription) {
+      this.counterSubscription.unsubscribe();
+    }
+  }
+
+  /**
+   * Actualiza contadores de duración en tiempo real
+   */
+  updateCounters(): void {
+    const now = new Date();
+    this.agents = this.agents.map(agent => {
+      if (agent.lastActivity) {
+        const lastActivityDate = new Date(agent.lastActivity);
+        const elapsed = Math.floor((now.getTime() - lastActivityDate.getTime()) / 1000);
+        return {
+          ...agent,
+          timeInState: elapsed,
+          duration: this.formatDuration(elapsed)
+        };
+      }
+      return agent;
+    });
+    this.cdr.detectChanges();
+  }
+
   ngOnDestroy(): void {
     this.stopAutoRefresh();
+    this.stopCounterUpdate();
     this.destroyCharts();
   }
 
@@ -356,6 +397,13 @@ export class AgentsMonitorComponent implements OnInit, OnDestroy, AfterViewInit 
   /**
    * Obtener clase CSS según estado
    */
+  formatDuration(seconds: number): string {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  }
+
   getStatusClass(status: string): string {
     const classes: any = {
       'available': 'bg-green-100 text-green-800 border-green-200',

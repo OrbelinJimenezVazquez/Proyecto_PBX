@@ -6,8 +6,8 @@ from sqlalchemy import text, func, desc, and_, case
 from database import get_db
 import os
 from models import (
-    AgentActivity, AgentActivityPause, AgentActivitySession, 
-    QueueName, QEvent, QueueLog
+    AgentActivity, AgentActivityPause, AgentActivitySession, AgentActivityDeferPause,
+    QueueName, QEvent, QueueLog, Pause, QAgent, QName
 )
 from datetime import datetime, timedelta
 from typing import List, Optional
@@ -27,103 +27,197 @@ def get_asternic_auth():
 @router.get("/agents/realtime-status")
 def get_agents_realtime_status(db: Session = Depends(get_db)):
     """
-    Obtiene estado en tiempo real de todos los agentes con información detallada
-    Similar a la vista de Asternic Stats - OPTIMIZADO
+    Obtiene estado en tiempo real de todos los agentes usando las tablas correctas:
+    - agent_activity_session: Para sesiones activas (login/logout)
+    - agent_activity_pause: Para pausas actuales
+    - queuelog: Para eventos recientes de llamadas
+    - pauses: Para nombres de pausas
     """
     try:
-        # Query optimizada - sin subconsultas costosas en CDR
+        # Query principal: obtener agentes con sesión activa
         query = text("""
             SELECT 
-                aa.agent,
-                aa.queue,
-                aa.event,
-                aa.data,
-                aa.datetime,
-                aa.lastedforseconds,
-                TIMESTAMPDIFF(SECOND, aa.datetime, NOW()) as time_in_state,
-                qn.queue as queue_name,
-                aa.uniqueid,
-                COALESCE(an.agent, CONCAT('Agente ', aa.agent)) as agent_name
-            FROM qstats.agent_activity aa
-            LEFT JOIN qstats.queuenames qn ON aa.queue = qn.device
-            LEFT JOIN qstats.agentnames an ON aa.agent = an.device
-            INNER JOIN (
-                SELECT agent, MAX(id) as max_id
-                FROM qstats.agent_activity 
-                GROUP BY agent
-            ) latest ON aa.id = latest.max_id
-            ORDER BY qn.queue, aa.agent
+                aas.agent,
+                aas.state,
+                aas.queue,
+                aas.datetime,
+                aas.incall,
+                aas.sessionid,
+                an.agent as agent_name,
+                TIMESTAMPDIFF(SECOND, aas.datetime, NOW()) as session_duration,
+                -- Información de pausa activa
+                aap.state as pause_state,
+                aap.data as pause_reason,
+                aap.datetime as pause_datetime,
+                TIMESTAMPDIFF(SECOND, aap.datetime, NOW()) as pause_duration,
+                -- Información de pausa diferida
+                aadp.reason as defer_pause_reason
+            FROM qstats.agent_activity_session aas
+            LEFT JOIN qstats.agentnames an ON aas.agent = an.device
+            LEFT JOIN qstats.agent_activity_pause aap ON aas.agent = aap.agent AND aap.state = 'START PAUSE'
+            LEFT JOIN qstats.agent_activity_deferpause aadp ON aas.agent = aadp.agent
+            WHERE aas.state = 'START SESSION'
+            ORDER BY aas.agent
         """)
         
         result = db.execute(query).fetchall()
         
         agents = []
         queues_dict = {}
-        agent_extensions = [row[0] for row in result]
+        agent_names = [row[0] for row in result]
         
-        # Obtener estadísticas de llamadas del día en una sola query (OPTIMIZADO)
-        if agent_extensions:
+        # Obtener últimos eventos de llamada de queuelog (incluyendo CONNECT para llamadas activas)
+        call_events_dict = {}
+        if agent_names:
+            events_query = text("""
+                SELECT 
+                    ql.agent,
+                    ql.event,
+                    ql.queuename,
+                    ql.callid,
+                    ql.data1,
+                    ql.data2,
+                    ql.data3,
+                    ql.time,
+                    TIMESTAMPDIFF(SECOND, ql.time, NOW()) as duration_seconds
+                FROM asteriskcdrdb.queuelog ql
+                INNER JOIN (
+                    SELECT agent, MAX(id) as max_id
+                    FROM asteriskcdrdb.queuelog
+                    WHERE agent IN :agents
+                    AND event IN ('CONNECT', 'COMPLETEAGENT', 'COMPLETECALLER', 'RINGNOANSWER', 'RINGCANCELED')
+                    AND time >= DATE_SUB(NOW(), INTERVAL 2 HOUR)
+                    GROUP BY agent
+                ) latest ON ql.agent = latest.agent AND ql.id = latest.max_id
+            """)
+            
+            events_result = db.execute(events_query, {"agents": tuple(agent_names)}).fetchall()
+            call_events_dict = {row[0]: {
+                'event': row[1],
+                'queuename': row[2],
+                'callid': row[3],
+                'caller_id': row[4],
+                'wait_time': row[5],
+                'talk_time': row[6],
+                'time': row[7],
+                'duration_seconds': row[8]
+            } for row in events_result}
+        
+        # Obtener estadísticas de llamadas del día
+        calls_dict = {}
+        if agent_names:
             calls_query = text("""
                 SELECT 
-                    CASE 
-                        WHEN src IN :agents THEN src
-                        WHEN dst IN :agents THEN dst
-                    END as agent,
+                    agent,
                     COUNT(*) as call_count,
-                    MAX(calldate) as last_call
-                FROM asteriskcdrdb.cdr
-                WHERE (src IN :agents OR dst IN :agents)
-                AND disposition = 'ANSWERED'
-                AND DATE(calldate) = CURDATE()
+                    MAX(time) as last_call
+                FROM asteriskcdrdb.queuelog
+                WHERE agent IN :agents
+                AND event = 'CONNECT'
+                AND DATE(time) = CURDATE()
                 GROUP BY agent
             """)
             
-            calls_result = db.execute(calls_query, {"agents": tuple(agent_extensions)}).fetchall()
+            calls_result = db.execute(calls_query, {"agents": tuple(agent_names)}).fetchall()
             calls_dict = {row[0]: {'count': row[1], 'last_call': row[2]} for row in calls_result}
-        else:
-            calls_dict = {}
         
+        # Procesar cada agente
         for row in result:
-            event = row[2] or ''
-            status = determine_status(event)
-            queue_device = row[1] or 'sin_cola'
-            queue_name = row[7] or 'Sin Cola'
-            agent_ext = row[0]
+            agent_name = row[0]
+            session_state = row[1]
+            queues_str = row[2] or ''
+            session_datetime = row[3]
+            incall = row[4] or 0
+            pause_state = row[8]
+            pause_reason = row[9]
+            pause_datetime = row[10]
+            pause_duration = row[11] or 0
+            defer_pause = row[12]
+            session_duration = row[7] or 0
             
-            # Obtener info de llamadas del diccionario pre-cargado
-            call_info = calls_dict.get(agent_ext, {'count': 0, 'last_call': None})
+            # Información de última llamada
+            call_event = call_events_dict.get(agent_name, {})
+            call_info = calls_dict.get(agent_name, {'count': 0, 'last_call': None})
+            
+            # Determinar estado del agente y duración
+            time_in_state = 0
+            duration_display = "00:00:00"
+            
+            # Verificar si está en llamada activa (evento CONNECT reciente sin COMPLETE después)
+            is_in_active_call = False
+            if call_event.get('event') == 'CONNECT':
+                # Si el evento CONNECT es reciente (menos de 2 horas) y no hay COMPLETE después
+                call_duration = call_event.get('duration_seconds', 0)
+                if call_duration < 7200:  # 2 horas
+                    is_in_active_call = True
+                    time_in_state = call_duration
+                    duration_display = format_duration(call_duration)
+            
+            if is_in_active_call or incall == 1:
+                status = 'busy'
+                status_text = 'En Llamada'
+                if not is_in_active_call and call_event:
+                    time_in_state = call_event.get('duration_seconds', 0)
+                    duration_display = format_duration(time_in_state)
+            elif pause_state and 'START PAUSE' in pause_state:
+                status = 'paused'
+                status_text = 'En Pausa'
+                time_in_state = pause_duration
+                duration_display = format_duration(pause_duration)
+            elif defer_pause:
+                status = 'paused'
+                status_text = 'Pausa Diferida'
+                time_in_state = 0
+                duration_display = "00:00:00"
+            else:
+                status = 'available'
+                status_text = 'Disponible'
+                time_in_state = session_duration
+                duration_display = format_duration(session_duration)
+            
+            # Obtener nombre de cola principal (primera cola de la lista)
+            queue_list = queues_str.split(',')
+            primary_queue = queue_list[0] if queue_list else 'sin_cola'
+            
+            # Buscar nombre de cola
+            queue_name_result = db.execute(
+                text("SELECT queue FROM qstats.queuenames WHERE device = :device LIMIT 1"),
+                {"device": primary_queue}
+            ).fetchone()
+            queue_display_name = queue_name_result[0] if queue_name_result else 'Sin Cola'
             
             agent_data = {
-                'extension': agent_ext,
-                'name': row[9],
-                'queue': queue_device,
-                'queueName': queue_name,
+                'extension': agent_name,
+                'name': row[6] or agent_name,
+                'queue': primary_queue,
+                'queueName': queue_display_name,
                 'status': status,
-                'statusText': get_status_text(status),
-                'event': event,
-                'lastActivity': row[4].isoformat() if row[4] else None,
-                'timeInState': row[6] or 0,
-                'duration': format_duration(row[6] or 0),
-                'paused': 'PAUSE' in event,
-                'pauseReason': row[3] if 'PAUSE' in event else None,
-                'inCall': 'CONNECT' in event or 'COMPLETE' in event,
-                'uniqueid': row[8],
-                'callerId': row[3] if ('CONNECT' in event or 'COMPLETE' in event) else '',
+                'statusText': status_text,
+                'event': call_event.get('event', session_state),
+                'lastActivity': session_datetime.isoformat() if session_datetime else None,
+                'timeInState': time_in_state,
+                'duration': duration_display,
+                'paused': status == 'paused',
+                'pauseReason': pause_reason or defer_pause or '',
+                'inCall': status == 'busy',
+                'uniqueid': call_event.get('callid', ''),
+                'callerId': call_event.get('caller_id', ''),
                 'lastCallTime': call_info['last_call'].isoformat() if call_info['last_call'] else None,
                 'lastCallFormatted': format_last_call_time(call_info['last_call']) if call_info['last_call'] else 'Sin datos',
-                'callsToday': call_info['count']
+                'callsToday': call_info['count'],
+                'sessionId': row[5]
             }
             
             agents.append(agent_data)
             
             # Agrupar por cola
-            if queue_device not in queues_dict:
-                queues_dict[queue_device] = {
-                    'queue': queue_device,
-                    'queueName': queue_name,
+            if primary_queue not in queues_dict:
+                queues_dict[primary_queue] = {
+                    'queue': primary_queue,
+                    'queueName': queue_display_name,
                     'agents': []
                 }
-            queues_dict[queue_device]['agents'].append(agent_data)
+            queues_dict[primary_queue]['agents'].append(agent_data)
         
         # Resumen por estado
         summary = {
@@ -131,8 +225,8 @@ def get_agents_realtime_status(db: Session = Depends(get_db)):
             'available': sum(1 for a in agents if a['status'] == 'available'),
             'busy': sum(1 for a in agents if a['status'] == 'busy'),
             'paused': sum(1 for a in agents if a['status'] == 'paused'),
-            'offline': sum(1 for a in agents if a['status'] == 'offline'),
-            'ringing': sum(1 for a in agents if a['status'] == 'ringing')
+            'offline': 0,  # Los que no están en START SESSION
+            'ringing': 0
         }
         
         return {
@@ -141,6 +235,7 @@ def get_agents_realtime_status(db: Session = Depends(get_db)):
             "summary": summary,
             "timestamp": datetime.now().isoformat()
         }
+        
     except Exception as e:
         print(f"Error en get_agents_realtime_status: {str(e)}")
         import traceback
