@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { ApiService } from '../core/api.service';
 import { ToastService } from '../core/toast.service';
 import { ChartService } from '../core/chart.service';
+import { QueueStatsService, QueueRealtimeStats } from '../core/queue-stats.service';
 import { Chart } from 'chart.js';
 import { catchError } from 'rxjs/operators';
 import { of, Subscription, interval } from 'rxjs';
@@ -19,8 +20,11 @@ import { switchMap } from 'rxjs/operators';
 })
 export class AgentsMonitorComponent implements OnInit, OnDestroy, AfterViewInit {
   agents: any[] = [];
+  agentsByQueues: any[] = [];
   sessions: any[] = [];
   pauses: any[] = [];
+  queueStats: QueueRealtimeStats | null = null;
+  viewMode: 'agents' | 'queues' = 'agents';
   summary: any = {
     total: 0,
     available: 0,
@@ -59,11 +63,12 @@ export class AgentsMonitorComponent implements OnInit, OnDestroy, AfterViewInit 
     private api: ApiService,
     private toast: ToastService,
     private chartService: ChartService,
+    private queueStatsService: QueueStatsService,
     private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
-    this.loadAgents();
+    this.loadData();
     this.startAutoRefresh();
   }
 
@@ -74,6 +79,69 @@ export class AgentsMonitorComponent implements OnInit, OnDestroy, AfterViewInit 
   ngOnDestroy(): void {
     this.stopAutoRefresh();
     this.destroyCharts();
+  }
+
+  /**
+   * Carga todos los datos (agentes y estadísticas de colas)
+   */
+  loadData(): void {
+    this.loading = true;
+    
+    // Cargar solo agentes primero para que sea más rápido
+    this.api.getAgentsRealtimeStatus().pipe(
+      catchError((err) => {
+        console.error('Error cargando datos:', err);
+        this.toast.error('Error al cargar datos');
+        return of(null);
+      })
+    ).subscribe({
+      next: (data) => {
+        // Procesar datos de agentes
+        if (data) {
+          this.agents = data.agents || [];
+          this.agentsByQueues = data.queues || [];
+          this.summary = data.summary || this.summary;
+          this.lastUpdate = new Date();
+          
+          // Extraer colas únicas
+          const uniqueQueues = new Map();
+          this.agents.forEach(a => {
+            if (a.queue) {
+              uniqueQueues.set(a.queue, a.queueName || a.queue);
+            }
+          });
+          this.queues = Array.from(uniqueQueues.entries()).map(([id, name]) => ({ id, name }));
+          
+          // Verificar alertas
+          this.checkPauseAlerts();
+        }
+        
+        this.loading = false;
+        this.cdr.detectChanges();
+        
+        // Cargar estadísticas de colas después (no bloquea la vista principal)
+        this.loadQueueStats();
+      }
+    });
+  }
+
+  /**
+   * Carga estadísticas de colas en segundo plano
+   */
+  loadQueueStats(): void {
+    this.queueStatsService.getRealtimeStats().pipe(
+      catchError((err) => {
+        console.error('Error cargando estadísticas de colas:', err);
+        return of(null);
+      })
+    ).subscribe({
+      next: (data) => {
+        if (data) {
+          this.queueStats = data;
+          this.cdr.detectChanges();
+        }
+      }
+    });
   }
 
   /**
@@ -210,9 +278,10 @@ export class AgentsMonitorComponent implements OnInit, OnDestroy, AfterViewInit 
         switchMap(() => this.api.getAgentsRealtimeStatus())
       )
       .subscribe({
-        next: (data: any) => {
+        next: (data) => {
           if (data) {
             this.agents = data.agents || [];
+            this.agentsByQueues = data.queues || [];
             this.summary = data.summary || this.summary;
             this.lastUpdate = new Date();
             this.cdr.detectChanges();
@@ -234,7 +303,7 @@ export class AgentsMonitorComponent implements OnInit, OnDestroy, AfterViewInit 
    * Refresh manual
    */
   refresh(): void {
-    this.loadAgents();
+    this.loadData();
     this.loadSessions();
     this.loadPauses();
     this.toast.success('Datos actualizados');

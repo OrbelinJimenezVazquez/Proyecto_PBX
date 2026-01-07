@@ -1,13 +1,15 @@
-# routers/asternic.py
-from fastapi import APIRouter, Depends, HTTPException
+
+# routers/asternic.py 
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import text, func, desc
+from sqlalchemy import text, func, desc, and_, case
 from database import get_db
-from models import AgentActivity, AgentActivityPause, AgentActivitySession, User, AgentName, Pause, QueueName
-from datetime import datetime, timedelta
-import requests
-from requests.auth import HTTPBasicAuth
 import os
+from models import (
+    AgentActivity, AgentActivityPause, AgentActivitySession, 
+    QueueName, QEvent, QueueLog
+)
+from datetime import datetime, timedelta
 from typing import List, Optional
 
 router = APIRouter(prefix="/api/asternic", tags=["Asternic"])
@@ -21,54 +23,130 @@ def get_asternic_auth():
     """Retorna la autenticación para Asternic"""
     return HTTPBasicAuth(ASTERNIC_USER, ASTERNIC_PASS)
 
-@router.get("/agents/status")
-def get_agents_real_time_status():
+
+@router.get("/agents/realtime-status")
+def get_agents_realtime_status(db: Session = Depends(get_db)):
     """
-    Obtiene el estado en tiempo real de todos los agentes desde Asternic
+    Obtiene estado en tiempo real de todos los agentes con información detallada
+    Similar a la vista de Asternic Stats - OPTIMIZADO
     """
     try:
-        # Endpoint de Asternic para obtener estado de agentes
-        # Ajusta la ruta según la versión de tu Asternic
-        response = requests.get(
-            f"{ASTERNIC_URL}/api/agents",
-            auth=get_asternic_auth(),
-            timeout=10
-        )
+        # Query optimizada - sin subconsultas costosas en CDR
+        query = text("""
+            SELECT 
+                aa.agent,
+                aa.queue,
+                aa.event,
+                aa.data,
+                aa.datetime,
+                aa.lastedforseconds,
+                TIMESTAMPDIFF(SECOND, aa.datetime, NOW()) as time_in_state,
+                qn.queue as queue_name,
+                aa.uniqueid,
+                COALESCE(an.agent, CONCAT('Agente ', aa.agent)) as agent_name
+            FROM qstats.agent_activity aa
+            LEFT JOIN qstats.queuenames qn ON aa.queue = qn.device
+            LEFT JOIN qstats.agentnames an ON aa.agent = an.device
+            INNER JOIN (
+                SELECT agent, MAX(id) as max_id
+                FROM qstats.agent_activity 
+                GROUP BY agent
+            ) latest ON aa.id = latest.max_id
+            ORDER BY qn.queue, aa.agent
+        """)
         
-        if response.status_code == 200:
-            data = response.json()
+        result = db.execute(query).fetchall()
+        
+        agents = []
+        queues_dict = {}
+        agent_extensions = [row[0] for row in result]
+        
+        # Obtener estadísticas de llamadas del día en una sola query (OPTIMIZADO)
+        if agent_extensions:
+            calls_query = text("""
+                SELECT 
+                    CASE 
+                        WHEN src IN :agents THEN src
+                        WHEN dst IN :agents THEN dst
+                    END as agent,
+                    COUNT(*) as call_count,
+                    MAX(calldate) as last_call
+                FROM asteriskcdrdb.cdr
+                WHERE (src IN :agents OR dst IN :agents)
+                AND disposition = 'ANSWERED'
+                AND DATE(calldate) = CURDATE()
+                GROUP BY agent
+            """)
             
-            # Procesar y normalizar la respuesta
-            agents = []
-            if isinstance(data, dict) and 'agents' in data:
-                for agent in data['agents']:
-                    agents.append({
-                        'extension': agent.get('extension') or agent.get('agent'),
-                        'name': agent.get('name', f"Agente {agent.get('extension')}"),
-                        'queue': agent.get('queue', 'General'),
-                        'status': normalize_status(agent.get('status', 'offline')),
-                        'statusText': agent.get('statustext', agent.get('status', 'Offline')),
-                        'pauseReason': agent.get('pausereason'),
-                        'lastCall': agent.get('lastcall'),
-                        'callsAnswered': int(agent.get('callsanswered', 0)),
-                        'callsMissed': int(agent.get('callsmissed', 0)),
-                        'avgTalkTime': int(agent.get('avgtalktime', 0)),
-                        'loginTime': agent.get('logintime'),
-                        'totalPauseTime': int(agent.get('pausetime', 0))
-                    })
-            
-            return {"agents": agents}
+            calls_result = db.execute(calls_query, {"agents": tuple(agent_extensions)}).fetchall()
+            calls_dict = {row[0]: {'count': row[1], 'last_call': row[2]} for row in calls_result}
         else:
-            raise HTTPException(
-                status_code=response.status_code, 
-                detail=f"Error al obtener datos de Asternic: {response.text}"
-            )
+            calls_dict = {}
+        
+        for row in result:
+            event = row[2] or ''
+            status = determine_status(event)
+            queue_device = row[1] or 'sin_cola'
+            queue_name = row[7] or 'Sin Cola'
+            agent_ext = row[0]
             
-    except requests.exceptions.RequestException as e:
-        raise HTTPException(
-            status_code=503, 
-            detail=f"No se pudo conectar con Asternic: {str(e)}"
-        )
+            # Obtener info de llamadas del diccionario pre-cargado
+            call_info = calls_dict.get(agent_ext, {'count': 0, 'last_call': None})
+            
+            agent_data = {
+                'extension': agent_ext,
+                'name': row[9],
+                'queue': queue_device,
+                'queueName': queue_name,
+                'status': status,
+                'statusText': get_status_text(status),
+                'event': event,
+                'lastActivity': row[4].isoformat() if row[4] else None,
+                'timeInState': row[6] or 0,
+                'duration': format_duration(row[6] or 0),
+                'paused': 'PAUSE' in event,
+                'pauseReason': row[3] if 'PAUSE' in event else None,
+                'inCall': 'CONNECT' in event or 'COMPLETE' in event,
+                'uniqueid': row[8],
+                'callerId': row[3] if ('CONNECT' in event or 'COMPLETE' in event) else '',
+                'lastCallTime': call_info['last_call'].isoformat() if call_info['last_call'] else None,
+                'lastCallFormatted': format_last_call_time(call_info['last_call']) if call_info['last_call'] else 'Sin datos',
+                'callsToday': call_info['count']
+            }
+            
+            agents.append(agent_data)
+            
+            # Agrupar por cola
+            if queue_device not in queues_dict:
+                queues_dict[queue_device] = {
+                    'queue': queue_device,
+                    'queueName': queue_name,
+                    'agents': []
+                }
+            queues_dict[queue_device]['agents'].append(agent_data)
+        
+        # Resumen por estado
+        summary = {
+            'total': len(agents),
+            'available': sum(1 for a in agents if a['status'] == 'available'),
+            'busy': sum(1 for a in agents if a['status'] == 'busy'),
+            'paused': sum(1 for a in agents if a['status'] == 'paused'),
+            'offline': sum(1 for a in agents if a['status'] == 'offline'),
+            'ringing': sum(1 for a in agents if a['status'] == 'ringing')
+        }
+        
+        return {
+            "agents": agents,
+            "queues": list(queues_dict.values()),
+            "summary": summary,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        print(f"Error en get_agents_realtime_status: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error al obtener agentes: {str(e)}")
+    
 
 @router.get("/queues/status")
 def get_queues_real_time_status():
@@ -211,76 +289,6 @@ def normalize_status(status: str) -> str:
         return 'offline'
 
 # ============================================
-# ALTERNATIVA: Si Asternic no tiene API REST
-# ============================================
-
-@router.get("/agents/from-asterisk")
-def get_agents_from_asterisk_db(db: Session = Depends(get_db)):
-    """
-    Alternativa: Obtener agentes desde las tablas de Asterisk 
-    (usando queuelog en lugar de queue_members que no existe)
-    """
-    from sqlalchemy import text
-    
-    # Como queue_members no existe, obtenemos agentes activos desde queuelog
-    query = text("""
-        SELECT DISTINCT
-            ql.agent as extension,
-            u.name as agent_name,
-            ql.queuename as queue_name,
-            CASE 
-                WHEN EXISTS (
-                    SELECT 1 FROM asteriskcdrdb.queuelog ql2
-                    WHERE ql2.agent = ql.agent 
-                    AND ql2.event = 'CONNECT'
-                    AND ql2.time > DATE_SUB(NOW(), INTERVAL 5 MINUTE)
-                ) THEN 'busy'
-                WHEN EXISTS (
-                    SELECT 1 FROM asteriskcdrdb.queuelog ql3
-                    WHERE ql3.agent = ql.agent 
-                    AND ql3.event IN ('ENTERQUEUE', 'RINGNOANSWER')
-                    AND ql3.time > DATE_SUB(NOW(), INTERVAL 10 MINUTE)
-                ) THEN 'available'
-                ELSE 'offline'
-            END as status
-        FROM asteriskcdrdb.queuelog ql
-        LEFT JOIN asterisk.users u ON ql.agent = u.extension
-        WHERE ql.agent IS NOT NULL
-            AND ql.agent != 'NONE'
-            AND ql.time > DATE_SUB(NOW(), INTERVAL 24 HOUR)
-        GROUP BY ql.agent, ql.queuename
-        ORDER BY ql.queuename, ql.agent
-    """)
-    
-    result = db.execute(query).fetchall()
-    
-    agents = []
-    for row in result:
-        agents.append({
-            'extension': row[0],
-            'name': row[1] or f"Agente {row[0]}",
-            'queue': row[2],
-            'status': row[3],
-            'statusText': get_status_text(row[3]),
-            'paused': False,
-            'callsAnswered': 0,
-            'lastCall': None
-        })
-    
-    return {"agents": agents}
-
-def get_status_text(status: str) -> str:
-    """Convierte status a texto legible"""
-    status_map = {
-        'available': 'Disponible',
-        'busy': 'En llamada',
-        'paused': 'En pausa',
-        'ringing': 'Timbrando',
-        'offline': 'Desconectado'
-    }
-    return status_map.get(status, status)
-
-# ============================================
 # ENDPOINTS NUEVOS PARA MONITOR DE AGENTES COMPLETO
 # ============================================
 
@@ -366,14 +374,15 @@ def get_agents_realtime_status(db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al obtener agentes: {str(e)}")
 
+
 @router.get("/agents/{agent_extension}/details")
 def get_agent_details(agent_extension: str, db: Session = Depends(get_db)):
     """
     Obtiene detalles completos de un agente específico
-    Busca por nombre del agente desde agent_activity
+    Incluye estadísticas históricas y eventos recientes
     """
     try:
-        # Obtener última actividad del agente (para validar que existe y obtener datos básicos)
+        # Última actividad
         latest_activity = (
             db.query(AgentActivity)
             .filter(AgentActivity.agent == agent_extension)
@@ -407,7 +416,8 @@ def get_agent_details(agent_extension: str, db: Session = Depends(get_db)):
                 SUM(CASE WHEN event LIKE '%COMPLETE%' THEN lastedforseconds END) as total_talk_time,
                 AVG(CASE WHEN event LIKE '%COMPLETE%' THEN lastedforseconds END) as avg_talk_time,
                 COUNT(CASE WHEN event LIKE '%PAUSE%' THEN 1 END) as pause_count,
-                SUM(CASE WHEN event LIKE '%PAUSE%' THEN lastedforseconds END) as total_pause_time
+                SUM(CASE WHEN event LIKE '%PAUSE%' THEN lastedforseconds END) as total_pause_time,
+                COUNT(CASE WHEN event LIKE '%RINGNOANSWER%' THEN 1 END) as missed_calls
             FROM qstats.agent_activity
             WHERE agent = :agent
             AND datetime >= :today
@@ -415,9 +425,51 @@ def get_agent_details(agent_extension: str, db: Session = Depends(get_db)):
         
         stats = db.execute(daily_stats, {"agent": agent_extension, "today": today}).fetchone()
         
+        # Estadísticas de la semana
+        week_ago = datetime.now() - timedelta(days=7)
+        
+        weekly_stats = text("""
+            SELECT 
+                COUNT(CASE WHEN event LIKE '%CONNECT%' THEN 1 END) as calls_answered,
+                AVG(CASE WHEN event LIKE '%COMPLETE%' THEN lastedforseconds END) as avg_talk_time,
+                SUM(CASE WHEN event LIKE '%COMPLETE%' THEN lastedforseconds END) as total_talk_time
+            FROM qstats.agent_activity
+            WHERE agent = :agent
+            AND datetime >= :week_ago
+        """)
+        
+        week_stats = db.execute(weekly_stats, {"agent": agent_extension, "week_ago": week_ago}).fetchone()
+        
+        # Eventos recientes (últimas 10 actividades)
+        recent_events_query = text("""
+            SELECT 
+                datetime,
+                event,
+                queue,
+                data,
+                lastedforseconds
+            FROM qstats.agent_activity
+            WHERE agent = :agent
+            ORDER BY datetime DESC
+            LIMIT 10
+        """)
+        
+        recent_events_result = db.execute(recent_events_query, {"agent": agent_extension}).fetchall()
+        
+        recent_events = [
+            {
+                "datetime": row[0].isoformat() if row[0] else None,
+                "event": row[1],
+                "queue": row[2],
+                "data": row[3],
+                "duration": row[4]
+            }
+            for row in recent_events_result
+        ]
+        
         return {
             "extension": agent_extension,
-            "name": agent_extension,  # Usamos el nombre del agente como está en la BD
+            "name": agent_extension,
             "currentActivity": {
                 "event": latest_activity.event if latest_activity else None,
                 "queue": latest_activity.queue if latest_activity else None,
@@ -440,10 +492,22 @@ def get_agent_details(agent_extension: str, db: Session = Depends(get_db)):
                 "totalTalkTime": stats[1] or 0,
                 "avgTalkTime": round(stats[2] or 0, 1),
                 "pauseCount": stats[3] or 0,
-                "totalPauseTime": stats[4] or 0
-            }
+                "totalPauseTime": stats[4] or 0,
+                "missedCalls": stats[5] or 0
+            },
+            "weeklyStats": {
+                "callsAnswered": week_stats[0] or 0,
+                "avgTalkTime": round(week_stats[1] or 0, 1),
+                "totalTalkTime": week_stats[2] or 0
+            },
+            "recentEvents": recent_events
         }
+    except HTTPException:
+        raise
     except Exception as e:
+        print(f"Error en get_agent_details: {str(e)}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Error al obtener detalles del agente: {str(e)}")
 
 @router.get("/agents/sessions")
@@ -488,6 +552,114 @@ def get_agents_sessions(db: Session = Depends(get_db)):
         "timestamp": datetime.now().isoformat()
     }
 
+@router.get("/queues/realtime-metrics")
+def get_queues_realtime_metrics(db: Session = Depends(get_db)):
+    """
+    Obtiene métricas en tiempo real de todas las colas
+    Usando queuelog y estadísticas de QStats
+    """
+    try:
+        metrics_query = text("""
+            SELECT 
+                qn.queue as queue_name,
+                qn.device as queue_id,
+                -- Llamadas en espera (últimos 5 minutos)
+                (SELECT COUNT(DISTINCT callid)
+                 FROM asteriskcdrdb.queuelog ql
+                 WHERE ql.queuename = qn.device
+                 AND ql.event = 'ENTERQUEUE'
+                 AND ql.time >= DATE_SUB(NOW(), INTERVAL 5 MINUTE)
+                 AND NOT EXISTS (
+                     SELECT 1 FROM asteriskcdrdb.queuelog ql2
+                     WHERE ql2.callid = ql.callid
+                     AND ql2.event IN ('CONNECT', 'ABANDON', 'EXITWITHTIMEOUT')
+                 )
+                ) as calls_waiting,
+                -- Agentes logueados
+                (SELECT COUNT(DISTINCT agent)
+                 FROM qstats.agent_activity_session
+                 WHERE queue = qn.device
+                 AND state = 'LOGGEDIN'
+                ) as agents_logged,
+                -- Agentes disponibles
+                (SELECT COUNT(DISTINCT aa.agent)
+                 FROM qstats.agent_activity aa
+                 INNER JOIN (
+                     SELECT agent, MAX(id) as max_id
+                     FROM qstats.agent_activity
+                     WHERE queue = qn.device
+                     GROUP BY agent
+                 ) latest ON aa.id = latest.max_id
+                 WHERE aa.event LIKE '%UNPAUSE%' OR aa.event LIKE '%ADDMEMBER%'
+                ) as agents_available,
+                -- Llamadas del día
+                (SELECT COUNT(*)
+                 FROM asteriskcdrdb.queuelog ql
+                 WHERE ql.queuename = qn.device
+                 AND ql.event = 'ENTERQUEUE'
+                 AND DATE(ql.time) = CURDATE()
+                ) as calls_today,
+                -- Llamadas contestadas hoy
+                (SELECT COUNT(DISTINCT callid)
+                 FROM asteriskcdrdb.queuelog ql
+                 WHERE ql.queuename = qn.device
+                 AND ql.event IN ('CONNECT', 'COMPLETEAGENT', 'COMPLETECALLER')
+                 AND DATE(ql.time) = CURDATE()
+                ) as answered_today
+            FROM qstats.queuenames qn
+            ORDER BY qn.queue
+        """)
+        
+        result = db.execute(metrics_query).fetchall()
+        
+        queues = []
+        for row in result:
+            total_today = row[5] or 0
+            answered_today = row[6] or 0
+            answer_rate = round((answered_today / total_today * 100), 1) if total_today > 0 else 0
+            
+            queues.append({
+                "queueName": row[0],
+                "queueId": row[1],
+                "callsWaiting": row[2] or 0,
+                "agentsLogged": row[3] or 0,
+                "agentsAvailable": row[4] or 0,
+                "callsToday": total_today,
+                "answeredToday": answered_today,
+                "answerRate": answer_rate
+            })
+        
+        return {
+            "queues": queues,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        print(f"Error en get_queues_realtime_metrics: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error al obtener métricas: {str(e)}")
+
+@router.get("/events/types")
+def get_event_types(db: Session = Depends(get_db)):
+    """
+    Obtiene todos los tipos de eventos disponibles en el sistema
+    """
+    try:
+        events = db.query(QEvent).order_by(QEvent.event_id).all()
+        
+        return {
+            "events": [
+                {
+                    "id": e.event_id,
+                    "name": e.event,
+                    "description": get_event_description(e.event)
+                }
+                for e in events
+            ]
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+    
 @router.get("/agents/pauses")
 def get_agents_pauses(db: Session = Depends(get_db)):
     """
@@ -527,3 +699,223 @@ def get_agents_pauses(db: Session = Depends(get_db)):
         "totalPaused": len(pauses),
         "timestamp": datetime.now().isoformat()
     }
+
+
+@router.get("/agents/activity-detailed")
+def get_agents_activity_detailed(
+    hours: int = 24,
+    agent: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """
+    Obtiene actividad detallada de agentes con eventos específicos
+    Usa las tablas qevent y agent_activity para datos precisos
+    
+    Parámetros:
+    - hours: Horas hacia atrás para obtener datos (default: 24)
+    - agent: Filtrar por agente específico (opcional)
+    """
+    try:
+        since = datetime.now() - timedelta(hours=hours)
+        
+        # Query que une agent_activity con qevent para obtener nombres de eventos
+        query = text("""
+            SELECT 
+                aa.id,
+                aa.datetime,
+                aa.queue,
+                qn.queue as queue_name,
+                aa.agent,
+                aa.event as event_code,
+                aa.data,
+                aa.lastedforseconds,
+                aa.uniqueid,
+                aa.computed
+            FROM qstats.agent_activity aa
+            LEFT JOIN qstats.queuenames qn ON aa.queue = qn.device
+            WHERE aa.datetime >= :since
+            """ + (" AND aa.agent = :agent" if agent else "") + """
+            ORDER BY aa.datetime DESC
+            LIMIT 500
+        """)
+        
+        params = {"since": since}
+        if agent:
+            params["agent"] = agent
+        
+        result = db.execute(query, params).fetchall()
+        
+        activities = []
+        for row in result:
+            activities.append({
+                "id": row[0],
+                "timestamp": row[1].isoformat() if row[1] else None,
+                "queue": row[2],
+                "queue_name": row[3] or row[2],
+                "agent": row[4],
+                "event": row[5],
+                "event_description": get_event_description(row[5]),
+                "data": row[6],
+                "duration": row[7],
+                "uniqueid": row[8],
+                "computed": row[9]
+            })
+        
+        # Agrupar por agente para estadísticas
+        agent_stats = {}
+        for activity in activities:
+            agent_id = activity["agent"]
+            if agent_id not in agent_stats:
+                agent_stats[agent_id] = {
+                    "agent": agent_id,
+                    "total_activities": 0,
+                    "events": {},
+                    "total_duration": 0
+                }
+            
+            agent_stats[agent_id]["total_activities"] += 1
+            
+            event = activity["event"]
+            if event not in agent_stats[agent_id]["events"]:
+                agent_stats[agent_id]["events"][event] = 0
+            agent_stats[agent_id]["events"][event] += 1
+            
+            if activity["duration"]:
+                agent_stats[agent_id]["total_duration"] += activity["duration"]
+        
+        return {
+            "activities": activities,
+            "agent_summaries": list(agent_stats.values()),
+            "total_activities": len(activities),
+            "period": f"Last {hours} hours",
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        print(f"Error en get_agents_activity_detailed: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error al obtener actividad: {str(e)}")
+
+
+@router.get("/events/types")
+def get_all_event_types(db: Session = Depends(get_db)):
+    """
+    Obtiene todos los tipos de eventos registrados en qevent
+    """
+    try:
+        events = db.query(QEvent).order_by(QEvent.event_id).all()
+        
+        event_list = []
+        for event in events:
+            event_list.append({
+                "id": event.event_id,
+                "code": event.event,
+                "description": get_event_description(event.event)
+            })
+        
+        return {
+            "events": event_list,
+            "total": len(event_list),
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        print(f"Error en get_all_event_types: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error al obtener tipos de eventos: {str(e)}")
+
+
+# ============================================
+# FUNCIONES AUXILIARES
+# ============================================
+
+def determine_status(event: str) -> str:
+    """Determina el estado del agente basado en el evento"""
+    if not event:
+        return 'offline'
+    
+    event_upper = event.upper()
+    
+    if 'CONNECT' in event_upper or 'COMPLETEAGENT' in event_upper:
+        return 'busy'
+    elif 'PAUSE' in event_upper:
+        return 'paused'
+    elif 'UNPAUSE' in event_upper or 'ADDMEMBER' in event_upper:
+        return 'available'
+    elif 'RINGNOANSWER' in event_upper or 'RINGCANCELED' in event_upper:
+        return 'ringing'
+    else:
+        return 'offline'
+
+def get_status_text(status: str) -> str:
+    """Convierte status a texto legible en español"""
+    status_map = {
+        'available': 'Disponible',
+        'busy': 'En llamada',
+        'paused': 'En pausa',
+        'ringing': 'Timbrando',
+        'offline': 'Desconectado'
+    }
+    return status_map.get(status, status)
+
+def get_event_description(event: str) -> str:
+    """Devuelve descripción del evento"""
+    descriptions = {
+        'ABANDON': 'Llamada abandonada',
+        'ADDMEMBER': 'Agente agregado a cola',
+        'CONNECT': 'Llamada conectada',
+        'COMPLETEAGENT': 'Llamada finalizada por agente',
+        'COMPLETECALLER': 'Llamada finalizada por cliente',
+        'ENTERQUEUE': 'Llamada entra a cola',
+        'EXITWITHTIMEOUT': 'Salida por timeout',
+        'PAUSE': 'Agente en pausa',
+        'UNPAUSE': 'Agente disponible',
+        'RINGNOANSWER': 'Llamada no contestada',
+        'RINGCANCELED': 'Llamada cancelada',
+        'AGENTLOGIN': 'Agente conectado',
+        'AGENTLOGOFF': 'Agente desconectado'
+    }
+    return descriptions.get(event, event or 'Desconocido')
+
+def format_duration(seconds: int) -> str:
+    """Formatea duración en formato HH:MM:SS"""
+    if not seconds or seconds < 0:
+        return '00:00:00'
+    
+    hours = seconds // 3600
+    minutes = (seconds % 3600) // 60
+    secs = seconds % 60
+    
+    return f"{hours:02d}:{minutes:02d}:{secs:02d}"
+
+def format_last_call_time(call_time: datetime) -> str:
+    """Formatea el tiempo de la última llamada de forma legible"""
+    if not call_time:
+        return 'Sin datos'
+    
+    now = datetime.now()
+    diff = now - call_time
+    
+    if diff.days > 0:
+        if diff.days == 1:
+            return 'hace un día'
+        elif diff.days < 7:
+            return f'hace {diff.days} días'
+        elif diff.days < 30:
+            weeks = diff.days // 7
+            return f'hace {weeks} {"semana" if weeks == 1 else "semanas"}'
+        else:
+            return f'hace {diff.days} días'
+    
+    hours = diff.seconds // 3600
+    if hours > 0:
+        if hours == 1:
+            return 'hace una hora'
+        else:
+            return f'hace {hours} horas'
+    
+    minutes = (diff.seconds % 3600) // 60
+    if minutes > 0:
+        return f'hace {minutes} minutos'
+    
+    return 'hace un momento'

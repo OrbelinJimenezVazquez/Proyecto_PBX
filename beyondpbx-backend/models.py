@@ -1,6 +1,7 @@
-from sqlalchemy import Column, Integer, String, DateTime, Text, ForeignKey, Float, BigInteger
+from sqlalchemy import Column, Integer, String, DateTime, Text, ForeignKey, Float, BigInteger, TIMESTAMP
 from sqlalchemy.orm import relationship
 from database import Base
+
 
 # Modelo para CDR (Call Detail Records)
 class CDR(Base):
@@ -231,3 +232,119 @@ class QueueName(Base):
     
     def __repr__(self):
         return f"<QueueName(device={self.device}, queue={self.queue})>"
+    
+#Modelo para QEvent (qstats) - Catálogo de eventos
+class QEvent(Base):
+    __tablename__ = "qevent"
+    __table_args__ = {'schema': 'qstats'}
+    
+    event_id = Column(Integer, primary_key=True, autoincrement=True)
+    event = Column(String(40), nullable=True)
+    
+    def __repr__(self):
+        return f"<QEvent(event_id={self.event_id}, event={self.event})>"
+
+# Modelo para SQLRealtime (qstats) - Configuración realtime
+class SQLRealtime(Base):
+    __tablename__ = "sqlrealtime"
+    __table_args__ = {'schema': 'qstats'}
+    
+    user = Column(String(100), primary_key=True)
+    lastupdate = Column(TIMESTAMP, nullable=False)
+    data = Column(Text, nullable=True)
+    
+    def __repr__(self):
+        return f"<SQLRealtime(user={self.user}, lastupdate={self.lastupdate})>"
+
+# Modelo para Queues (asterisk) - Definición de colas
+class Queue(Base):
+    __tablename__ = "queues"
+    __table_args__ = {'schema': 'asterisk'}
+    
+    name = Column(String(128), primary_key=True)
+    musiconhold = Column(String(128))
+    announce = Column(String(128))
+    context = Column(String(128))
+    timeout = Column(Integer)
+    ringinuse = Column(String(10))
+    setinterfacevar = Column(String(10))
+    setqueuevar = Column(String(10))
+    setqueueentryvar = Column(String(10))
+    monitor_format = Column(String(8))
+    membermacro = Column(String(512))
+    membergosub = Column(String(512))
+    queue_youarenext = Column(String(128))
+    queue_thereare = Column(String(128))
+    queue_callswaiting = Column(String(128))
+    queue_quantity1 = Column(String(128))
+    queue_quantity2 = Column(String(128))
+    queue_holdtime = Column(String(128))
+    queue_minutes = Column(String(128))
+    queue_minute = Column(String(128))
+    queue_seconds = Column(String(128))
+    queue_thankyou = Column(String(128))
+    queue_callerannounce = Column(String(128))
+    queue_reporthold = Column(String(128))
+    announce_frequency = Column(Integer)
+    announce_to_first_user = Column(String(10))
+    min_announce_frequency = Column(Integer)
+    announce_round_seconds = Column(Integer)
+    announce_holdtime = Column(String(128))
+    announce_position = Column(String(10))
+    announce_position_limit = Column(Integer)
+    periodic_announce = Column(String(50))
+    periodic_announce_frequency = Column(Integer)
+    relative_periodic_announce = Column(String(10))
+    random_periodic_announce = Column(String(10))
+    retry = Column(Integer)
+    wrapuptime = Column(Integer)
+    penaltymemberslimit = Column(Integer)
+    autofill = Column(String(10))
+    monitor_type = Column(String(128))
+    autopause = Column(String(10))
+    autopausedelay = Column(Integer)
+    autopausebusy = Column(String(10))
+    autopauseunavail = Column(String(10))
+    maxlen = Column(Integer)
+    servicelevel = Column(Integer)
+    strategy = Column(String(128))
+    joinempty = Column(String(128))
+    leavewhenempty = Column(String(128))
+    reportholdtime = Column(String(10))
+    memberdelay = Column(Integer)
+    weight = Column(Integer)
+    timeoutrestart = Column(String(10))
+    defaultrule = Column(String(128))
+    timeoutpriority = Column(String(128))
+    
+    def __repr__(self):
+        return f"<Queue(name={self.name})>"
+
+# Modelo para Queue Members (asterisk) - Agentes asignados a colas
+class QueueMember(Base):
+    __tablename__ = "queue_members"
+    __table_args__ = {'schema': 'asterisk'}
+    
+    uniqueid = Column(Integer, primary_key=True, autoincrement=True)
+    membername = Column(String(80))
+    queue_name = Column(String(80))
+    interface = Column(String(80))
+    penalty = Column(Integer)
+    paused = Column(Integer)
+    state_interface = Column(String(80))
+    
+    def __repr__(self):
+        return f"<QueueMember(membername={self.membername}, queue={self.queue_name})>"
+
+# Modelo para Queue Rules (asterisk) - Reglas de colas
+class QueueRule(Base):
+    __tablename__ = "queue_rules"
+    __table_args__ = {'schema': 'asterisk'}
+    
+    rule_name = Column(String(80), primary_key=True)
+    time = Column(String(32), primary_key=True)
+    min_penalty = Column(String(32))
+    max_penalty = Column(String(32))
+    
+    def __repr__(self):
+        return f"<QueueRule(rule_name={self.rule_name})>"

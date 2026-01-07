@@ -114,7 +114,6 @@ export class ApiService {
     return this.http.get<any>(`${this.baseUrl}/dashboard/queue-summary`);
   }
 
-  // ENDPOINTS PARA MONITOR DE AGENTES
   getAgentsRealtimeStatus(): Observable<any> {
     return this.http.get<any>(`${this.baseUrl}/asternic/agents/realtime-status`);
   }
@@ -131,6 +130,15 @@ export class ApiService {
     return this.http.get<any>(`${this.baseUrl}/asternic/agents/pauses`);
   }
 
+  // NUEVOS ENDPOINTS MEJORADOS
+  getQueuesRealtimeMetrics(): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/asternic/queues/realtime-metrics`);
+  }
+
+  getEventTypes(): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/asternic/events/types`);
+  }
+  
   // ENDPOINTS PARA GESTIÓN DE COLAS
   getQueues(): Observable<any[]> {
     return this.http.get<any[]>(`${this.baseUrl}/queues`);
