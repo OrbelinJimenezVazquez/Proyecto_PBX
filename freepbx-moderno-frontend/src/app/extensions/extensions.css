@@ -171,3 +171,21 @@
   border-color: #2E86AB;
   color: #56cfe1;
 }
+
+/* ============================================
+   AVATAR CIRCULAR EN TABLA - Específico para la vista de lista
+   ============================================ */
+.extension-avatar {
+  width: 2rem;           /* equivale a w-8 */
+  height: 2rem;          /* equivale a h-8 */
+  border-radius: 100%;    /* 👈 Esto lo hace circular */
+  background: linear-gradient(90deg, #2E86AB 0%, hsl(188, 40%, 43%) 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-weight: bold;
+  font-size: 0.875rem;   /* text-sm */
+  flex-shrink: 0;
+}
