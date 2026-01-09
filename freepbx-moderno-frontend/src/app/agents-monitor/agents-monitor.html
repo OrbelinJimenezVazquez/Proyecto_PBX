@@ -139,7 +139,7 @@
     </div>
   </div>
 
-  <!-- Estadísticas de Colas (Nueva sección) -->
+  <!-- Estadísticas de Colas (Nueva sección) 
   @if (queueStats) {
     <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
       <div class="flex items-center gap-3 mb-6">
@@ -148,7 +148,7 @@
       </div>
       
       <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <!-- Llamadas Recibidas -->
+        Llamadas Recibidas 
         <div class="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200">
           <div class="flex items-center justify-between mb-2">
             <span class="text-sm text-blue-700 font-medium">Recibidas</span>
@@ -157,7 +157,7 @@
           <p class="text-3xl font-bold text-blue-700">{{ queueStats.totals.calls.received || 0 }}</p>
         </div>
 
-        <!-- Llamadas Atendidas -->
+        Llamadas Atendidas 
         <div class="p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200">
           <div class="flex items-center justify-between mb-2">
             <span class="text-sm text-green-700 font-medium">Atendidas</span>
@@ -166,7 +166,7 @@
           <p class="text-3xl font-bold text-green-700">{{ queueStats.totals.calls.answered || 0 }}</p>
         </div>
 
-        <!-- Llamadas Abandonadas -->
+         Llamadas Abandonadas 
         <div class="p-4 bg-gradient-to-br from-red-50 to-red-100 rounded-xl border border-red-200">
           <div class="flex items-center justify-between mb-2">
             <span class="text-sm text-red-700 font-medium">Abandonadas</span>
@@ -175,7 +175,7 @@
           <p class="text-3xl font-bold text-red-700">{{ queueStats.totals.calls.abandoned || 0 }}</p>
         </div>
 
-        <!-- SLA -->
+         SLA 
         <div class="p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200">
           <div class="flex items-center justify-between mb-2">
             <span class="text-sm text-purple-700 font-medium">SLA</span>
@@ -185,7 +185,7 @@
         </div>
       </div>
     </div>
-  }
+  } -->
 
   <!-- Resumen de Estados -->
 
@@ -204,7 +204,7 @@
   </div>
 
   <!-- Filtros -->
-  <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+  <div class="bg-white rounded-xl border border-gray-200 p-4 m-6 shadow-sm w-full">
     <div class="flex flex-wrap items-center gap-4">
       <div class="flex items-center gap-2">
         <span class="text-sm text-gray-600">Filtrar por estado:</span>
@@ -265,7 +265,7 @@
   </div>
 
   <!-- Lista de Agentes / Colas -->
-  <div class="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden">
+  <div class="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden m-6">
     <div class="px-6 py-5 border-b border-gray-100">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-3">
@@ -297,7 +297,7 @@
     } @else {
       <!-- Vista por Agentes -->
       @if (viewMode === 'agents') {
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto w-full">
           <table class="w-full">
             <thead class="bg-gray-50 border-b border-gray-200">
               <tr>

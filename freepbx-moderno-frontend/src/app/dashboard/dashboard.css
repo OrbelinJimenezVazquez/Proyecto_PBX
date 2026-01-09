@@ -79,6 +79,54 @@
   letter-spacing: -0.02em;
 }
 
+
+.modern-table {
+  background: white;
+  border: 1px solid var(--border-subtle);
+  border-radius: 20px;
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  margin-top: 1.5rem;
+}
+
+.modern-table-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border-subtle);
+  background: #fafafa; /* gris muy claro */
+}
+
+.modern-table-header h3 {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+/* Encabezado de la tabla: fondo gris */
+.modern-table thead th {
+  background-color: #f1f5f9; /* gray-100 */
+  font-weight: 600;
+  color: #475569;
+}
+
+.modern-table tbody tr:hover {
+  background-color: #f9fafb;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.219);
+}
+
+.modern-table table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.modern-table th,
+.modern-table td {
+  padding: 0.75rem 1.5rem;
+  text-align: left;
+}
+
 /* ============================================
    CARDS DE GRÁFICOS - Específicas del Dashboard
    ============================================ */

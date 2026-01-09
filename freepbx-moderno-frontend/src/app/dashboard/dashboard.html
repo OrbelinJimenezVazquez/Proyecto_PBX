@@ -256,50 +256,51 @@
       </div>
 
       <!-- Top Agentes -->
-      <div class="chart-card enhanced-chart-card">
-        <div class="chart-header">
-          <h3>Top Agentes</h3>
-          <span class="chart-subtitle">Llamadas contestadas</span>
+       
+        <div class="chart-card enhanced-chart-card">
+          <div class="chart-header">
+            <h3>Top Agentes</h3>
+            <span class="chart-subtitle">Llamadas contestadas</span>
+          </div>
+          <div class="h-64">
+            <canvas #agentChart class="w-full h-full"></canvas>
+          </div>
         </div>
-        <div class="h-64">
-          <canvas #agentChart class="w-full h-full"></canvas>
+
+        <!-- Distribución por Tipo -->
+        <div class="chart-card enhanced-chart-card">
+          <div class="chart-header">
+            <h3>Distribución por Tipo</h3>
+            <span class="chart-subtitle">Destinos de llamadas</span>
+          </div>
+          <div class="h-64">
+            <canvas #destChart class="w-full h-full"></canvas>
+          </div>
+        </div>
+
+        <!-- Llamadas por Hora (Nueva) -->
+        <div class="chart-card enhanced-chart-card lg:col-span-2">
+          <div class="chart-header">
+            <h3>Distribución por Hora del Día</h3>
+            <span class="chart-subtitle">Volumen de llamadas</span>
+          </div>
+          <div class="h-64">
+            <canvas #hourlyChart class="w-full h-full"></canvas>
+          </div>
         </div>
       </div>
 
-      <!-- Distribución por Tipo -->
-      <div class="chart-card enhanced-chart-card">
-        <div class="chart-header">
-          <h3>Distribución por Tipo</h3>
-          <span class="chart-subtitle">Destinos de llamadas</span>
-        </div>
-        <div class="h-64">
-          <canvas #destChart class="w-full h-full"></canvas>
-        </div>
-      </div>
-
-      <!-- Llamadas por Hora (Nueva) -->
-      <div class="chart-card enhanced-chart-card lg:col-span-2">
-        <div class="chart-header">
-          <h3>Distribución por Hora del Día</h3>
-          <span class="chart-subtitle">Volumen de llamadas</span>
-        </div>
-        <div class="h-64">
-          <canvas #hourlyChart class="w-full h-full"></canvas>
-        </div>
-      </div>
-    </div>
-
-    <!-- Top Agents Table -->
+  <!-- Top Agents Table -->
     <div class="modern-table">
       <div class="px-6 py-5 border-b border-gray-100">
         <div class="flex items-center gap-3">
-          <span class="material-icons-outlined text-[#2E86AB]">emoji_events</span>
+          <span class="material-icons-round text-[#2E86AB]">emoji_events</span>
           <h3 class="text-lg font-semibold text-gray-800">Top Agentes del Período</h3>
         </div>
       </div>
       <div class="overflow-x-auto">
         <table class="w-full">
-          <thead>
+          <thead class="bg-gray-100 border-b border-gray-200">
             <tr>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Agente</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Extensión</th>
@@ -349,6 +350,5 @@
         </table>
       </div>
     </div>
-
   }
 </div>
