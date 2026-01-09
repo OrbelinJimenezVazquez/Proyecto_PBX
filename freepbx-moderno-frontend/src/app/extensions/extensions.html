@@ -11,6 +11,25 @@
       </div>
     </div>
     <div class="flex items-center gap-3">
+      <!-- Botón Añadir -->
+      <button 
+        (click)="addNewExtension()"
+        [disabled]="loading"
+        class="export-btn-secondary">
+        <span class="material-icons-outlined text-lg">add</span>
+        Añadir
+      </button>
+      
+      <!-- Botón Eliminar Seleccionadas -->
+      <button 
+        (click)="deleteSelectedExtensions()" 
+        [disabled]="loading || !hasSelectedExtensions"
+        class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+        <span class="material-icons-outlined text-lg">delete</span>
+        Eliminar
+      </button>
+      
+      <!--  Botón Exportar Todo -->
       <button 
         (click)="exportExtensions()" 
         [disabled]="loading"
@@ -18,6 +37,8 @@
         <span class="material-icons-outlined text-lg">download</span>
         Exportar
       </button>
+      
+      <!-- Botón Actualizar -->
       <button 
         (click)="loadExtensions()" 
         [disabled]="loading"
@@ -93,14 +114,14 @@
       </div>
     </div>
 
-    <!-- ✅ TABLA CON PAGINACIÓN -->
+    <!--  TABLA CON PAGINACIÓN -->
     <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-lg">
       <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
             <tr>
               <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                <!-- ✅ Checkbox de cabecera CORREGIDO -->
+                <!--  Checkbox de cabecera CORREGIDO -->
                 <input 
                   type="checkbox" 
                   [checked]="allSelected" 
@@ -123,7 +144,7 @@
             @for (ext of paginatedExtensions; track ext.extension) {
               <tr class="hover:bg-gray-50 transition-colors">
                 <td class="px-4 py-3 whitespace-nowrap">
-                  <!-- ✅ Checkbox individual CORREGIDO -->
+                  <!--  Checkbox individual CORREGIDO -->
                   <input 
                     type="checkbox" 
                     [(ngModel)]="ext.selected"
@@ -169,7 +190,11 @@
                     <button class="ext-action-icon-btn w-8 h-8 p-0" title="Editar">
                       <span class="material-icons-outlined text-sm">edit</span>
                     </button>
-                    <button class="ext-action-icon-btn w-8 h-8 p-0" title="Eliminar">
+                    <!--  Botón eliminar individual -->
+                    <button 
+                      class="ext-action-icon-btn w-8 h-8 p-0" 
+                      title="Eliminar"
+                      (click)="deleteExtension(ext)">
                       <span class="material-icons-outlined text-sm">delete</span>
                     </button>
                   </div>
@@ -180,7 +205,7 @@
         </table>
       </div>
 
-      <!-- ✅ PAGINACIÓN DINÁMICA CON 3 BOTONES -->
+      <!--  PAGINACIÓN DINÁMICA CON 3 BOTONES -->
       <div class="px-4 py-3 bg-gray-50 border-t border-gray-200 flex items-center justify-between text-sm text-gray-700">
         <div class="flex items-center gap-2">
           <span>Mostrando <span class="font-medium">{{ startIndex + 1 }}</span> a <span class="font-medium">{{ endIndex }}</span> de <span class="font-medium">{{ extensions.length }}</span> extensiones</span>
