@@ -21,11 +21,11 @@ export class ExtensionsComponent implements OnInit {
   onlineCount = 0;
   offlineCount = 0;
 
-  // ✅ Paginación
+  //  Paginación
   currentPage = 1;
   itemsPerPage = 32; // 94 / 32 ≈ 3 páginas
 
-  // ✅ Selección masiva
+  //  Selección masiva
   allSelected = false;
 
   constructor(
@@ -69,7 +69,61 @@ export class ExtensionsComponent implements OnInit {
     });
   }
 
-  // ✅ Paginación
+  //  AÑADIDO: Botón Añadir
+  addNewExtension() {
+    this.toast.info('Funcionalidad de añadir extensión próximamente disponible');
+  }
+
+  //  AÑADIDO: Propiedad para habilitar botón eliminar
+  get hasSelectedExtensions() {
+    return this.extensions.some(ext => ext.selected);
+  }
+
+  //  AÑADIDO: Eliminar extensiones seleccionadas
+  deleteSelectedExtensions() {
+    const selected = this.extensions.filter(ext => ext.selected);
+    if (selected.length === 0) {
+      this.toast.warning('No hay extensiones seleccionadas para eliminar');
+      return;
+    }
+
+    this.confirmation.confirm({
+      title: '¿Eliminar extensiones?',
+      message: `Estás a punto de eliminar ${selected.length} extensione${selected.length !== 1 ? 's' : ''}. Esta acción no se puede deshacer.`,
+      confirmText: 'Eliminar',
+      cancelText: 'Cancelar'
+    }).then((result) => {
+      if (result) {
+        this.extensions = this.extensions.filter(ext => !ext.selected);
+        this.toast.success(`${selected.length} extensione${selected.length !== 1 ? 's' : ''} eliminada${selected.length !== 1 ? 's' : ''} correctamente`);
+        
+        // Recalcular stats
+        this.onlineCount = this.extensions.filter(e => e.status === 'online').length;
+        this.offlineCount = this.extensions.length - this.onlineCount;
+      }
+    });
+  }
+
+  //  AÑADIDO: Eliminar extensión individual
+  deleteExtension(extension: any) {
+    this.confirmation.confirm({
+      title: '¿Eliminar extensión?',
+      message: `Estás a punto de eliminar la extensión ${extension.extension}. Esta acción no se puede deshacer.`,
+      confirmText: 'Eliminar',
+      cancelText: 'Cancelar'
+    }).then((result) => {
+      if (result) {
+        this.extensions = this.extensions.filter(ext => ext.extension !== extension.extension);
+        this.toast.success(`Extensión ${extension.extension} eliminada correctamente`);
+        
+        // Recalcular stats
+        this.onlineCount = this.extensions.filter(e => e.status === 'online').length;
+        this.offlineCount = this.extensions.length - this.onlineCount;
+      }
+    });
+  }
+
+  //  Paginación
   get paginatedExtensions() {
     const start = (this.currentPage - 1) * this.itemsPerPage;
     const end = start + this.itemsPerPage;
@@ -84,7 +138,7 @@ export class ExtensionsComponent implements OnInit {
     return Math.min(this.startIndex + this.itemsPerPage, this.extensions.length);
   }
 
-  // ✅ Selección masiva (solo en la página actual)
+  //  Selección masiva (solo en la página actual)
   toggleAllSelection(event: any) {
     const checked = event.target.checked;
     this.paginatedExtensions.forEach(ext => ext.selected = checked);
@@ -95,7 +149,7 @@ export class ExtensionsComponent implements OnInit {
     this.allSelected = this.paginatedExtensions.every(ext => ext.selected);
   }
 
-  // ✅ Navegación
+  //  Navegación
   previousPage() {
     if (this.currentPage > 1) this.currentPage--;
   }
@@ -108,7 +162,7 @@ export class ExtensionsComponent implements OnInit {
     this.currentPage = page;
   }
 
-  // ✅ Exportación
+  //  Exportación
   exportExtensions() {
     if (this.extensions.length === 0) {
       this.toast.warning('No hay extensiones para exportar');
